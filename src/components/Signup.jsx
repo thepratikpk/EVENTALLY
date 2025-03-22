@@ -8,7 +8,8 @@ const Signup = () => {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    interests: ''
   });
   const [formErrors, setFormErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -120,14 +121,16 @@ const Signup = () => {
     try {
       await dispatch(registerUser({ 
         username: formData.username, 
-        password: formData.password 
+        password: formData.password,
+        interests: formData.interests
       })).unwrap();
       
       // Clear form
       setFormData({
         username: '',
         password: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        interests: ''
       });
       
       // Show success message and redirect
@@ -196,7 +199,7 @@ const Signup = () => {
             />
           </div>
           
-          <div className="mb-6">
+          <div className="mb-4">
             <label htmlFor="confirmPassword" className="block text-gray-700 text-sm font-semibold mb-2">Confirm Password</label>
             <input
               id="confirmPassword"
@@ -209,6 +212,21 @@ const Signup = () => {
               disabled={loading}
               autoComplete="off"
             />
+          </div>
+          
+          <div className="mb-6">
+            <label htmlFor="interests" className="block text-gray-700 text-sm font-semibold mb-2">Your Interests</label>
+            <textarea
+              id="interests"
+              name="interests"
+              className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+              value={formData.interests}
+              onChange={handleChange}
+              placeholder="Tell us about your interests (e.g., technology, sports, music, etc.)"
+              rows="3"
+              disabled={loading}
+            />
+            <p className="text-gray-500 text-xs mt-1">Optional: Share your interests to help us personalize your experience</p>
           </div>
           
           <button
