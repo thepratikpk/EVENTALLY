@@ -27,7 +27,7 @@ const loadFromLocalStorage = (key) => {
 // Async thunk for user registration
 export const registerUser = createAsyncThunk(
   'auth/registerUser',
-  async ({ username, password }, { rejectWithValue, getState }) => {
+  async ({ username, password, interests }, { rejectWithValue, getState }) => {
     try {
       // Check if username already exists
       const { users } = getState().auth;
@@ -40,7 +40,12 @@ export const registerUser = createAsyncThunk(
       // Hash the password before storing
       const hashedPassword = simpleHash(password);
       
-      return { username, password: hashedPassword };
+      // Return user object with interests
+      return { 
+        username, 
+        password: hashedPassword,
+        interests: interests || '' // Handle case where interests might be undefined
+      };
     } catch (error) {
       return rejectWithValue('Registration failed. Please try again.');
     }
@@ -66,7 +71,11 @@ export const loginUser = createAsyncThunk(
         return rejectWithValue('Invalid username or password');
       }
       
-      return { username };
+      // Return user data including interests
+      return { 
+        username,
+        interests: user.interests
+      };
     } catch (error) {
       return rejectWithValue('Login failed. Please try again.');
     }
@@ -93,6 +102,22 @@ const authSlice = createSlice({
     },
     clearAuthError: (state) => {
       state.error = null;
+    },
+    updateUserInterests: (state, action) => {
+      // Allow updating interests later if needed
+      if (state.currentUser) {
+        state.currentUser.interests = action.payload;
+        
+        // Update the user in the users array
+        const userIndex = state.users.findIndex(user => user.username === state.currentUser.username);
+        if (userIndex !== -1) {
+          state.users[userIndex].interests = action.payload;
+          saveToLocalStorage('users', state.users);
+        }
+        
+        // Save current user
+        saveToLocalStorage('currentUser', state.currentUser);
+      }
     }
   },
   extraReducers: (builder) => {
@@ -130,5 +155,5 @@ const authSlice = createSlice({
   }
 });
 
-export const { logoutUser, clearAuthError } = authSlice.actions;
+export const { logoutUser, clearAuthError, updateUserInterests } = authSlice.actions;
 export default authSlice.reducer;
