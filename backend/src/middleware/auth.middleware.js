@@ -1,31 +1,31 @@
 import jwt from "jsonwebtoken";
-import User from "../models/user.model.js";
+import {User} from "../models/user.model.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiError } from "../utils/ApiError.js";
 
-export const protectRoute = async (req, res, next) => {
+export const verifyJWT = asyncHandler(async(req,res,next)=>{
   try {
-    const token = req.cookies.jwt;
+    const token =req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer","")
 
-    if (!token) {
-      return res.status(401).json({ message: "Unauthorized - No Token Provided" });
+    if(!token){
+      throw new ApiError(401,"Unauthorized Token")
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    if (!decoded) {
-      return res.status(401).json({ message: "Unauthorized - Invalid Token" });
+    const decodedToken=jwt.verify(token,process.env.ACCESS_TOKEN_SECRET)
+    if(!decodedToken){
+      throw new ApiError(401,"Invalid Token")
     }
 
-    const user = await User.findById(decoded.userId).select("-password");
+    const user=await User.findById(decodedToken?._id).select("-password -refreshToken")
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    if(!user){
+      throw new ApiError(401,"Invalid Access Token")
     }
 
-    req.user = user;
 
-    next();
+    req.user=user
+    next()
   } catch (error) {
-    console.log("Error in protectRoute middleware: ", error.message);
-    res.status(500).json({ message: "Internal server error" });
+      throw new ApiError(401,error?.message || "Invalid Access token")
   }
-};
+})
