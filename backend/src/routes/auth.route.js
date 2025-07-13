@@ -2,7 +2,7 @@
 import { Router } from 'express'
 
 import { verifyJWT } from '../middleware/auth.middleware.js'
-import { login, logout, register } from '../controllers/auth.controller.js'
+import { changecurrentPassword, getcurrentuser, login, logout, refreshAccessToken, register, updateAccountDetails, updateUserInterests } from '../controllers/auth.controller.js'
 
 const router =Router()
 //OLD
@@ -15,9 +15,15 @@ const router =Router()
 
 router.route('/register').post(register)
 router.route('/login').post(login)
+router.route('/refresh-token').post(refreshAccessToken)
 
 // secured routes
-router.route('/logout').post(verifyJWT,logout)
+router.use(verifyJWT)
+router.route('/logout').post(logout)
+router.route('/me').get(getcurrentuser)
+router.route('/change-password').patch(changecurrentPassword)
+router.route('/update-account').patch(updateAccountDetails)
+router.route('/update-interests').patch(updateUserInterests)
 
 
 export default router

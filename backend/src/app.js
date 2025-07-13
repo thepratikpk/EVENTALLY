@@ -16,7 +16,10 @@ app.use(express.static("public"))
 app.use(cookieParser())
 
 import authRouter from './routes/auth.route.js'
+import eventRouter from './routes/event.route.js'
+
 app.use('/api/v1/auth',authRouter)
+app.use('/api/v1/events',eventRouter)
 
 
 export {app}

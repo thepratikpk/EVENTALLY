@@ -4,6 +4,7 @@ import {ApiError} from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
 import {User} from "../models/user.model.js"
 import { json } from "express";
+import jwt from 'jsonwebtoken'
 // import { generateToken } from "../lib/utils.js";
 // import User from "../models/user.model.js";
 // import bcrypt from "bcryptjs";
@@ -141,7 +142,7 @@ const register=asyncHandler(async(req,res)=>{
   throw new ApiError(400, "All fields are required, including at least one interest");
 }
 
-if(password.length()<6){
+if(password.length<6){
   throw new ApiError(401,"Password must be 6 characters")
 }
 
@@ -156,7 +157,7 @@ if(password.length()<6){
 
   const user=await User.create({
     fullname,
-    email,
+    email:email.toLowerCase(),
     username:username.toLowerCase(),
     password,
     interests
@@ -278,12 +279,100 @@ const getcurrentuser=asyncHandler(async(req,res)=>{
 })
 
 
+const refreshAccessToken=asyncHandler(async(req,res)=>{
+  const incomingRefreshToken=req.cookies.refreshTokens || req.body.refreshTokens
+  if(!incomingRefreshToken){
+    throw new ApiError(401,"Unauthorized refresh-token request")
+  }
+
+ try {
+   const decodedToken=jwt.verify(incomingRefreshToken,process.env.REFRESH_TOKEN_SECRET)
+   if(!decodedToken){
+     throw new ApiError(401,"Token not decoded")
+   }
+ 
+   const user=await User.findById(decodedToken._id).select("-password")
+   if(!user){
+     throw new ApiError(401,"Invalid refersh-token")
+   }
+ 
+   if(incomingRefreshToken!==user?.refreshTokens){
+     throw new ApiError(401,"Refresh token is expired or used")
+   }
+ 
+   const options={
+             httpOnly:true,
+             secure:true,
+         }
+   const {accessToken,refreshToken}=await generateRefreshAndAccessTokens(user._id)
+   return res
+   .status(200)
+   .cookie("accessToken",accessToken,options)
+   .cookie("refreshToken",refreshToken,options)
+   .json(new ApiResponse(200,{accessToken,refreshToken},"Access-token refershed"))
+ } catch (error) {
+  throw new ApiError(401,error?.message || "invalid refersh token")
+ }
+  
 
 
+})
+
+
+const updateAccountDetails=asyncHandler(async(req,res)=>{
+  const {fullname,email}=req.body
+
+  if(!fullname || !email){
+    throw new ApiError(400,"All fields are required")
+  }
+
+  const user=await User.findByIdAndUpdate(req.user._id,
+    {
+      $set:{
+        fullname:fullname,
+        email:email.trim().toLowerCase()
+      }
+    },
+    {
+      new:true,
+      runValidators:true
+    }
+  ).select("-password")
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  return res
+  .status(200)
+  .json(new ApiResponse(200,user,"Account detais updated successfully"))
+
+
+})
+
+const updateUserInterests=asyncHandler(async(req,res)=>{
+  const {interests}=req.body
+  if (!Array.isArray(interests) || interests.length === 0) {
+    throw new ApiError(400, "At least one interest must be selected");
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.user._id,
+    { $set: { interests } },
+    { new: true }
+  ).select("-password -refreshTokens");
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Interests updated successfully"));
+})
 export {
   register,
   login,
   logout,
   changecurrentPassword,
-  getcurrentuser
+  getcurrentuser,
+  refreshAccessToken,
+  updateAccountDetails,
+  updateUserInterests
 }

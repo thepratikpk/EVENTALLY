@@ -7,24 +7,24 @@ const userSchema = new mongoose.Schema(
             type: String,
             required: true,
             unique: true,
-            lowercase:true,
-            trim:true,
-            index:true
+            lowercase: true,
+            trim: true,
+            index: true
         },
         fullname: {
             type: String,
             required: true,
             unique: true,
-            lowercase:true,
-            trim:true,
-            index:true
+            lowercase: true,
+            trim: true,
+            index: true
         },
         email: {
             type: String,
             required: true,
             unique: true,
-            trim:true,
-            
+            trim: true,
+
         },
         password: {
             type: String,
@@ -33,8 +33,15 @@ const userSchema = new mongoose.Schema(
         },
         interests: [{ type: String }],  // Array to store user interests
 
-        refreshTokens:{
-            type:String
+        role: {
+            type: String,
+            enum: ['student', 'club', 'admin'],
+            default: 'student'
+        },
+
+
+        refreshTokens: {
+            type: String
         }
     },
     { timestamps: true }
@@ -43,44 +50,44 @@ const userSchema = new mongoose.Schema(
 // coustom methods
 
 // for password encryption
-userSchema.pre("save",async function(next) {
-    if(!this.isModified("password")) return next();
-    this.password=await bcrypt.hash(this.password,10)
+userSchema.pre("save", async function (next) {
+    if (!this.isModified("password")) return next();
+    this.password = await bcrypt.hash(this.password, 10)
     next()
 })
 
 // for password checking 
 
-userSchema.methods.isPasswordCorrect=async function(password) {
-    return await bcrypt.compare(password,this.password)
+userSchema.methods.isPasswordCorrect = async function (password) {
+    return await bcrypt.compare(password, this.password)
 }
 
 // for generate jwt tokens
 
-userSchema.methods.generateAceessToken=function(){
+userSchema.methods.generateAceessToken = function () {
     return jwt.sign(
         {
-            _id:this._id,
-            email:this.email,
-            username:this.email,
-            fullname:this.fullname
+            _id: this._id,
+            email: this.email,
+            username: this.email,
+            fullname: this.fullname
         },
 
-        process.env.ACCESS_TOKEN_SECRET,{
-            expiresIn:process.env.ACCESS_TOKEN_EXPIRY
-        }
+        process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: process.env.ACCESS_TOKEN_EXPIRY
+    }
     )
 }
-userSchema.methods.generateRefreshToken=function(){
+userSchema.methods.generateRefreshToken = function () {
     return jwt.sign(
         {
-            _id:this._id,
-            
+            _id: this._id,
+
         },
 
-        process.env.REFRESH_TOKEN_SECRET,{
-            expiresIn:process.env.REFRESH_TOKEN_EXPIRY
-        }
+        process.env.REFRESH_TOKEN_SECRET, {
+        expiresIn: process.env.REFRESH_TOKEN_EXPIRY
+    }
     )
 }
 

@@ -13,20 +13,54 @@ const uploadOnCloudinary =async(localFilePath)=>{
         if(!localFilePath){
             return null;
         }
-        const reponse=await cloudinary.uploader.upload(localFilePath,{
-            resource_type:"auto"
+        const response=await cloudinary.uploader.upload(localFilePath,{
+            resource_type:"auto",
+            folder:"events"
         })
         // file upload on cloudinary successfully
         console.log("File uploaded on Cloudinary!!")
         fs.unlinkSync(localFilePath)
-        return reponse;
+        return response;
     }catch(err){
         console.log("Cloudinary upload error: ",err)
         // remove locally saved temp files
         if(fs.existsSync(localFilePath)){
             fs.unlinkSync(localFilePath)
         }
+        return null
     }
 }
 
-export {uploadOnCloudinary}
+const getPublicIdFromUrl = (url) => {
+  try {
+    if (!url) return null;
+  
+    const parts = url.split("/");
+    const fileWithExtension = parts.at(-1); // image.jpg
+    const fileName = fileWithExtension.split(".")[0];
+    const folder = parts.at(-2); // events
+  
+    return `${folder}/${fileName}`;
+  } catch (error) {
+    console.log("Error on extrancting public id :",error)
+    return null
+  }
+};
+
+
+const deleteFromCloudinary=async(publicId)=>{
+    try{
+        if(!publicId){
+            return null
+        }
+
+        const response=cloudinary.uploader.destroy(publicId)
+        console.log("File is deleted from cloudinary")
+        return response
+    }catch(err){
+        console.log("Cloudinary deleting error:",err)
+        return null
+    }
+}
+
+export {uploadOnCloudinary,getPublicIdFromUrl,deleteFromCloudinary}
