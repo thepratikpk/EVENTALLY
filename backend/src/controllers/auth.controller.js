@@ -384,6 +384,22 @@ const updateUserRoleBySuperAdmin=asyncHandler(async(req,res)=>{
     new ApiResponse(200, user, `User role updated to '${role}'`)
   );
 })
+
+const searchUserByUsername = asyncHandler(async (req, res) => {
+  const { username } = req.query;
+
+  if (!username) {
+    throw new ApiError(400, "Username is required");
+  }
+  const user = await User.findOne({ username: username.toLowerCase() }).select("-password -refreshTokens");
+  console.log("user found bu username:",user)
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  return res.status(200).json(new ApiResponse(200, user, "User fetched successfully"));
+});
 export {
   register,
   login,
@@ -393,5 +409,6 @@ export {
   refreshAccessToken,
   updateAccountDetails,
   updateUserInterests,
-  updateUserRoleBySuperAdmin
+  updateUserRoleBySuperAdmin,
+  searchUserByUsername
 }

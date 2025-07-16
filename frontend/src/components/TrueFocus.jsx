@@ -9,6 +9,7 @@ const TrueFocus = ({
   glowColor = "rgba(0, 255, 0, 0.6)",
   animationDuration = 0.5,
   pauseBetweenAnimations = 1,
+  fontSize = "3rem", // ✅ customizable font size
 }) => {
   const words = sentence.split(" ");
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -66,15 +67,10 @@ const TrueFocus = ({
           <span
             key={index}
             ref={(el) => (wordRefs.current[index] = el)}
-            className="relative text-[3rem] font-black cursor-pointer"
+            className="relative font-black cursor-pointer"
             style={{
-              filter: manualMode
-                ? isActive
-                  ? `blur(0px)`
-                  : `blur(${blurAmount}px)`
-                : isActive
-                  ? `blur(0px)`
-                  : `blur(${blurAmount}px)`,
+              fontSize,
+              filter: isActive ? `blur(0px)` : `blur(${blurAmount}px)`,
               "--border-color": borderColor,
               "--glow-color": glowColor,
               transition: `filter ${animationDuration}s ease`,
@@ -104,34 +100,20 @@ const TrueFocus = ({
           "--glow-color": glowColor,
         }}
       >
-        <span
-          className="absolute w-4 h-4 border-[3px] rounded-[3px] top-[-10px] left-[-10px] border-r-0 border-b-0"
-          style={{
-            borderColor: "var(--border-color)",
-            filter: "drop-shadow(0 0 4px var(--border-color))",
-          }}
-        ></span>
-        <span
-          className="absolute w-4 h-4 border-[3px] rounded-[3px] top-[-10px] right-[-10px] border-l-0 border-b-0"
-          style={{
-            borderColor: "var(--border-color)",
-            filter: "drop-shadow(0 0 4px var(--border-color))",
-          }}
-        ></span>
-        <span
-          className="absolute w-4 h-4 border-[3px] rounded-[3px] bottom-[-10px] left-[-10px] border-r-0 border-t-0"
-          style={{
-            borderColor: "var(--border-color)",
-            filter: "drop-shadow(0 0 4px var(--border-color))",
-          }}
-        ></span>
-        <span
-          className="absolute w-4 h-4 border-[3px] rounded-[3px] bottom-[-10px] right-[-10px] border-l-0 border-t-0"
-          style={{
-            borderColor: "var(--border-color)",
-            filter: "drop-shadow(0 0 4px var(--border-color))",
-          }}
-        ></span>
+        {/* Corner borders */}
+        {["top-[-10px] left-[-10px] border-r-0 border-b-0",
+          "top-[-10px] right-[-10px] border-l-0 border-b-0",
+          "bottom-[-10px] left-[-10px] border-r-0 border-t-0",
+          "bottom-[-10px] right-[-10px] border-l-0 border-t-0"].map((pos, i) => (
+            <span
+              key={i}
+              className={`absolute w-4 h-4 border-[3px] rounded-[3px] ${pos}`}
+              style={{
+                borderColor: "var(--border-color)",
+                filter: "drop-shadow(0 0 4px var(--border-color))",
+              }}
+            />
+        ))}
       </motion.div>
     </div>
   );

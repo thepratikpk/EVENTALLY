@@ -2,7 +2,7 @@
 import { Router } from 'express'
 
 import { authorizeRoles, verifyJWT } from '../middleware/auth.middleware.js'
-import { changecurrentPassword, getcurrentuser, login, logout, refreshAccessToken, register, updateAccountDetails, updateUserInterests, updateUserRoleBySuperAdmin } from '../controllers/auth.controller.js'
+import { changecurrentPassword, getcurrentuser, login, logout, refreshAccessToken, register, searchUserByUsername, updateAccountDetails, updateUserInterests, updateUserRoleBySuperAdmin } from '../controllers/auth.controller.js'
 
 const router =Router()
 //OLD
@@ -26,6 +26,7 @@ router.route('/update-account').patch(updateAccountDetails)
 router.route('/update-interests').patch(updateUserInterests)
 
 // superadmin
+router.get('/superadmin/search', authorizeRoles('superadmin'), searchUserByUsername);
 
 router.route('/superadmin/:id/role').patch(authorizeRoles('superadmin'),updateUserRoleBySuperAdmin)
 

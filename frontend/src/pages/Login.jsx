@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { toast } from "react-hot-toast";
 import { FaLock, FaUserAlt } from "react-icons/fa";
 import { FiLogIn } from "react-icons/fi";
-import { loginUser } from "../api/auth.api";
+
 import { useAuthStore } from "../store/useAuth";
 
 const Login = () => {

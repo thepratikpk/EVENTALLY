@@ -1,18 +1,15 @@
-// src/components/EventCard.jsx
 import React, { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import TiltedCard from "./TiltedCard";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import seminarImg from "../assets/seminar.png";
 
 gsap.registerPlugin(ScrollTrigger);
 
 const EventCard = ({ id, title, club_name, thumbnail }) => {
   const navigate = useNavigate();
   const cardRef = useRef(null);
-  const overlayRef = useRef(null);
 
-  // Scroll animation
   useEffect(() => {
     gsap.fromTo(
       cardRef.current,
@@ -30,64 +27,30 @@ const EventCard = ({ id, title, club_name, thumbnail }) => {
     );
   }, []);
 
-  // Floating overlay title on hover
-  const overlayContent = (
-    <div
-      ref={overlayRef}
-      className="px-4 py-1 bg-black/60 text-white text-sm font-semibold rounded-md"
-    >
-      {title}
-    </div>
-  );
-
-  useEffect(() => {
-    const el = overlayRef.current;
-    if (!el) return;
-
-    const tl = gsap.timeline({ paused: true });
-    tl.to(el, {
-      y: -5,
-      duration: 0.3,
-      ease: "power1.out",
-    });
-
-    const handleMouseEnter = () => tl.play();
-    const handleMouseLeave = () => tl.reverse();
-
-    el.parentElement?.addEventListener("mouseenter", handleMouseEnter);
-    el.parentElement?.addEventListener("mouseleave", handleMouseLeave);
-
-    return () => {
-      el.parentElement?.removeEventListener("mouseenter", handleMouseEnter);
-      el.parentElement?.removeEventListener("mouseleave", handleMouseLeave);
-    };
-  }, []);
-
   return (
     <div
       ref={cardRef}
       onClick={() => navigate(`/event/${id}`)}
-      className="cursor-pointer w-full max-w-sm mx-auto transition-transform hover:scale-[1.03]"
+      className="cursor-pointer max-w-sm w-full mx-auto"
     >
-      <TiltedCard
-        imageSrc={thumbnail || "https://via.placeholder.com/400x300.png?text=No+Image"}
-        altText={title}
-        containerHeight="320px"
-        containerWidth="100%"
-        imageHeight="300px"
-        imageWidth="100%"
-        scaleOnHover={1.05}
-        rotateAmplitude={12}
-        showMobileWarning={false}
-        showTooltip={false}
-        displayOverlayContent={true}
-        overlayContent={overlayContent}
-      />
+      <div className="relative h-[260px] w-full overflow-hidden rounded-2xl shadow-md group">
+        {/* Image */}
+        <img
+          src={thumbnail || seminarImg}
+          alt={title}
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+        />
 
-      <div className="mt-3 px-2 text-center">
-        <p className="text-gray-600 text-sm">
-          Hosted by <span className="font-semibold">{club_name}</span>
-        </p>
+        {/* Overlay gradient */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent z-0" />
+
+        {/* Bottom text */}
+        <div className="absolute bottom-0 left-0 right-0 px-4 pb-3 z-10 text-white">
+          <h3 className="text-lg font-bold leading-tight">{title}</h3>
+          <p className="text-sm">
+            Hosted by <span className="font-semibold">{club_name}</span>
+          </p>
+        </div>
       </div>
     </div>
   );

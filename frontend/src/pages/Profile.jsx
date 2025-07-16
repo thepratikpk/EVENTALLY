@@ -250,21 +250,30 @@ const Profile = () => {
             )}
 
             {['admin', 'superadmin'].includes(authUser.role) && (
-              <>
-                <button
-                  onClick={() => navigate('/managed-events')}
-                  className="text-sm bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition"
-                >
-                  Manage Events
-                </button>
-                <button
-                  onClick={() => navigate('/create-event')}
-                  className="text-sm bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
-                >
-                  Post Event
-                </button>
-              </>
-            )}
+  <>
+    <button
+      onClick={() => navigate('/managed-events')}
+      className="text-sm bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition"
+    >
+      Manage Events
+    </button>
+    <button
+      onClick={() => navigate('/create-event')}
+      className="text-sm bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+    >
+      Post Event
+    </button>
+    {authUser.role === 'superadmin' && (
+      <button
+        onClick={() => navigate('/users/superadmin')}
+        className="text-sm bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
+      >
+        Manage Users
+      </button>
+    )}
+  </>
+)}
+
           </div>
         </SpotlightCard>
       </motion.div>
