@@ -1,96 +1,95 @@
-import React from "react";
-import { motion } from "framer-motion";
-import { FaCalendarAlt, FaClock, FaMapMarkerAlt } from "react-icons/fa";
+// src/components/EventCard.jsx
+import React, { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import TiltedCard from "./TiltedCard";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-const EventCard = ({ event }) => {
-  const cardVariants = {
-    initial: {
-      borderColor: "transparent",
-      scale: 1,
-    },
-    hover: {
-      borderColor: "white",
-      scale: 1.03,
-      boxShadow: "0 15px 30px rgba(0, 0, 0, 0.1)",
-      transition: {
-        borderColor: { duration: 0.3 },
-        scale: { duration: 0.3 },
-        ease: "easeOut",
+gsap.registerPlugin(ScrollTrigger);
+
+const EventCard = ({ id, title, club_name, thumbnail }) => {
+  const navigate = useNavigate();
+  const cardRef = useRef(null);
+  const overlayRef = useRef(null);
+
+  // Scroll animation
+  useEffect(() => {
+    gsap.fromTo(
+      cardRef.current,
+      { opacity: 0, y: 50 },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 0.8,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: cardRef.current,
+          start: "top 90%",
+        },
       }
-    },
-    tap: {
-      scale: 0.98,
-      transition: {
-        duration: 0.2,
-      }
-    }
-  };
+    );
+  }, []);
+
+  // Floating overlay title on hover
+  const overlayContent = (
+    <div
+      ref={overlayRef}
+      className="px-4 py-1 bg-black/60 text-white text-sm font-semibold rounded-md"
+    >
+      {title}
+    </div>
+  );
+
+  useEffect(() => {
+    const el = overlayRef.current;
+    if (!el) return;
+
+    const tl = gsap.timeline({ paused: true });
+    tl.to(el, {
+      y: -5,
+      duration: 0.3,
+      ease: "power1.out",
+    });
+
+    const handleMouseEnter = () => tl.play();
+    const handleMouseLeave = () => tl.reverse();
+
+    el.parentElement?.addEventListener("mouseenter", handleMouseEnter);
+    el.parentElement?.addEventListener("mouseleave", handleMouseLeave);
+
+    return () => {
+      el.parentElement?.removeEventListener("mouseenter", handleMouseEnter);
+      el.parentElement?.removeEventListener("mouseleave", handleMouseLeave);
+    };
+  }, []);
 
   return (
-    <motion.div
-      className="bg-black/50 shadow-md rounded-2xl p-6 w-full mx-auto overflow-hidden relative"
-      variants={cardVariants}
-      initial="initial"
-      whileHover="hover"
-      whileTap="tap"
-      style={{
-        border: "2px solid",
-        borderColor: "transparent", // default
-        borderRadius: "1rem", // rounded-2xl
-      }}
+    <div
+      ref={cardRef}
+      onClick={() => navigate(`/event/${id}`)}
+      className="cursor-pointer w-full max-w-sm mx-auto transition-transform hover:scale-[1.03]"
     >
-      {/* Decorative hover overlay */}
-      <motion.div
-        className="absolute inset-0 bg-blue-500/10 opacity-0"
-        whileHover={{ opacity: 0.2 }}
-        transition={{ duration: 0.3 }}
+      <TiltedCard
+        imageSrc={thumbnail || "https://via.placeholder.com/400x300.png?text=No+Image"}
+        altText={title}
+        containerHeight="320px"
+        containerWidth="100%"
+        imageHeight="300px"
+        imageWidth="100%"
+        scaleOnHover={1.05}
+        rotateAmplitude={12}
+        showMobileWarning={false}
+        showTooltip={false}
+        displayOverlayContent={true}
+        overlayContent={overlayContent}
       />
 
-      <h2 className="text-xl font-bold text-white mb-2 relative z-10">
-        {event.event_name}
-      </h2>
-      <p className="text-sm text-white/90 mb-4 relative z-10">{event.title}</p>
-
-      <div className="flex flex-col gap-3 text-sm text-white/70 relative z-10">
-        <motion.div
-          className="flex items-center gap-2"
-          whileHover={{ x: 5 }}
-          transition={{ duration: 0.2 }}
-        >
-          <FaCalendarAlt className="text-blue-500" /> {event.event_date}
-        </motion.div>
-        <motion.div
-          className="flex items-center gap-2"
-          whileHover={{ x: 5 }}
-          transition={{ duration: 0.2 }}
-        >
-          <FaClock className="text-blue-500" /> {event.time}
-        </motion.div>
-        <motion.div
-          className="flex items-center gap-2"
-          whileHover={{ x: 5 }}
-          transition={{ duration: 0.2 }}
-        >
-          <FaMapMarkerAlt className="text-blue-500" /> {event.venue}
-        </motion.div>
+      <div className="mt-3 px-2 text-center">
+        <p className="text-gray-600 text-sm">
+          Hosted by <span className="font-semibold">{club_name}</span>
+        </p>
       </div>
-
-      <div className="mt-5 flex flex-wrap gap-2 relative z-10">
-        {event.domains.map((domain, idx) => (
-          <motion.span
-            key={idx}
-            className="px-3 py-1 text-xs bg-blue-500/10 text-white rounded-full"
-            whileHover={{
-              scale: 1.05,
-              backgroundColor: "rgba(59, 130, 246, 0.2)"
-            }}
-            transition={{ duration: 0.2 }}
-          >
-            {domain}
-          </motion.span>
-        ))}
-      </div>
-    </motion.div>
+    </div>
   );
 };
 

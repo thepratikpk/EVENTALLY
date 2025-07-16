@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema(
             type: String,
             required: true,
             unique: true,
-            lowercase: true,
+        
             trim: true,
             index: true
         },
@@ -35,7 +35,7 @@ const userSchema = new mongoose.Schema(
 
         role: {
             type: String,
-            enum: ['student', 'club', 'admin'],
+            enum: ['student','superadmin', 'admin'],
             default: 'student'
         },
 

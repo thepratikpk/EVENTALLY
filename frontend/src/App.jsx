@@ -1,44 +1,57 @@
 import React, { useEffect } from 'react';
-import { Route, Routes } from 'react-router-dom';
-import Hero from './components/Hero';
-import Login from './components/Login';
-import Register from './components/Register';
-import { Toaster } from 'react-hot-toast';
+import { Navigate, Route, Routes } from 'react-router-dom';
+import Hero from './pages/Hero';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import ToasterProvider from './components/ToasterProvider';
+import Navbar from './components/Navbar';
 import { useAuthStore } from './store/useAuth';
+import Profile from './pages/Profile';
+
+import CreateEvent from './pages/CreateEvent';
+import ManageEvents from './pages/ManangeEvents';
+import EditEvent from './pages/EditEvents';
+import EventDetails from './pages/EventDetails';
+
 
 const App = () => {
-  const { checkAuth, isCheckingAuth } = useAuthStore();
+  const { checkAuth, authUser } = useAuthStore();
 
   useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
-
-  if (isCheckingAuth) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin h-8 w-8 border-4 border-blue-500 rounded-full border-t-transparent"></div>
-      </div>
-    );
-  }
+    checkAuth(); // runs on app load
+  }, []);
+  const requireAdmin = (children) => {
+    if (!authUser || !['admin', 'superadmin'].includes(authUser.role)) {
+      return <Navigate to="/" />;
+    }
+    return children;
+  };
 
   return (
-    <div className='text-gray-800'>
+    <div>
+
+      {/* <Navbar /> */}
+      <ToasterProvider />
       <Routes>
-        <Route path='/' element={<Hero />} />
-        <Route path='/login' element={<Login />} />
-        <Route path='/register' element={<Register />} />
-        
+        <Route
+          path="/events/edit/:id"
+          element={requireAdmin(<EditEvent />)}
+        />
+        <Route path="/event/:id" element={<EventDetails />} />
+        <Route path="/" element={<Hero />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+
+        <Route
+          path="/managed-events"
+          element={requireAdmin(<ManageEvents />)}
+        />
+        <Route
+          path="/create-event"
+          element={requireAdmin(<CreateEvent />)} // ✅ protected route
+        />
       </Routes>
-      <Toaster
-        position="top-center"
-        toastOptions={{
-          style: {
-            background: '#fff',
-            color: '#374151',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
-          }
-        }}
-      />
     </div>
   );
 };

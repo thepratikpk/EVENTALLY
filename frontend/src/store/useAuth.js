@@ -1,71 +1,61 @@
 import { create } from "zustand";
-import { axiosInstance } from "../lib/axios.js";
+import { API } from "../lib/axios";
 import toast from "react-hot-toast";
-// import { io } from "socket.io-client";
 
-const BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:5001" : "/";
-export const useAuthStore = create((set, get) => ({
+
+export const useAuthStore = create((set) => ({
     authUser: null,
-    isSigningUp: false,
-    isLoggingIn: false,
     isCheckingAuth: true,
-    socket: null,
-
+    isSigningUp: false,
+    isLoggedin:false,
     checkAuth: async () => {
         try {
-          const res = await axiosInstance.get("/auth/check");
-    
-          set({ authUser: res.data });
-          
+            await API.post('/auth/refresh-token');
+            const res = await API.get('/auth/me')
+            set({ authUser: res.data?.data })
         } catch (error) {
-          console.log("Error in checkAuth:", error);
-          set({ authUser: null });
+            set({ authUser: null })
         } finally {
-          set({ isCheckingAuth: false });
+            set({ isCheckingAuth: false })
         }
-      },
+    },
 
-      login: async (data) => {
-        set({ isLoggingIn: true });
+    register: async (data) => {
+        set({ isSigningUp: true })
         try {
-          const res = await axiosInstance.post("/auth/login", data);
-          console.log("loggedin");
-          set({ authUser: res.data });
-          toast.success("Logged in successfully");
-    
-          
-        } catch (error) {
-          toast.error(error.response.data.message);
-        } finally {
-          set({ isLoggingIn: false });
-        }
-      },
-      register: async (data) => {
-        set({ isSigningUp: true });
-        try {
-          const res = await axiosInstance.post("/auth/register", data);
-          console.log("Register API response:", res); // Add logging to see the actual response
-          
-          // Check if res has a data property, if not, use the entire response as the user data
-          const userData = res.data || res;
-          set({ authUser: userData });
-          toast.success("Account created successfully");
-          
-        } catch (error) {
-          console.error("Registration error:", error);
-          toast.error(error.response?.data?.message || "Registration failed");
+             await API.post('/auth/register',data)
+            
+            toast.success("Registered successfully");
+        } catch (err) {
+            console.log(err)
+            toast.error(err.response?.data?.message || "Registration failed");
         } finally {
           set({ isSigningUp: false });
         }
-      },
-      logout: async () => {
+    },
+
+    login: async (data) => {
+        set({isLoggedin:true})
         try {
-          await axiosInstance.post("/auth/logout");
-          set({ authUser: null });
-          toast.success("Logged out successfully");
-          
-        } catch (error) {
-          toast.error(error.response.data.message);
+            const res = await API.post("/auth/login", data);
+            set({ authUser: res.data?.data?.user });
+            toast.success("Logged in successfully");
+            return res.data
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Login failed");
+            throw err
+        } finally {
+          set({ isLoggingIn: false });
         }
-      },
-}));
+    },
+
+    logout: async () => {
+        try {
+            await API.post("/auth/logout");
+            set({ authUser: null });
+            toast.success("Logged out successfully");
+        } catch (err) {
+            toast.error("Logout failed");
+        }
+    },
+}))

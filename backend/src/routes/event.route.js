@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { createEvent, getAllEvents, getEventsByUserInterests, updateEventDetails, updateEventThumbnail, } from "../controllers/event.controller.js";
-import { verifyJWT } from "../middleware/auth.middleware.js";
+import { createEvent, getAllEvents, getEventById, getEventsByUserInterests, getMyPostedEvents, updateEventDetails, updateEventThumbnail, } from "../controllers/event.controller.js";
+import { authorizeRoles, verifyJWT } from "../middleware/auth.middleware.js";
 import { upload } from "../middleware/multer.middleware.js";
 const router = Router()
 
@@ -17,18 +17,23 @@ const router = Router()
 // router.delete("/admin/:id", deleteEvent); // Delete an event
 
 router.route('/').get(getAllEvents)
-
+router.route('/interests').get(verifyJWT, getEventsByUserInterests);
+router.route('/:id').get(getEventById)
 
 // secured
 router.use(verifyJWT)
-router.route('/interests').get(getEventsByUserInterests)
+// router.route('/interests').get(getEventsByUserInterests)
 
 // admin 
 
-router.route('/admin').post(upload.fields([{
+router.route('/admin').post(
+    authorizeRoles('admin','superadmin'),
+    upload.fields([{
     name: "thumbnail",
     maxCount: 1
 }]), createEvent)
+
+router.route('/admin/my-events').get(authorizeRoles('admin', 'superadmin'),getMyPostedEvents)
 
 router.route('/admin/:id/details').patch(updateEventDetails)
 

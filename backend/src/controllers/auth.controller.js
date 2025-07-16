@@ -170,7 +170,7 @@ if(password.length<6){
   if(!createdUser){
     throw new ApiError(500,"Somthing wnet wrong while registering the user")
   }
-
+  console.log("registered:",createdUser)
   return res
   .status(201)
   .json(new ApiResponse(200,createdUser,"User Registered Successfully"))
@@ -280,7 +280,7 @@ const getcurrentuser=asyncHandler(async(req,res)=>{
 
 
 const refreshAccessToken=asyncHandler(async(req,res)=>{
-  const incomingRefreshToken=req.cookies.refreshTokens || req.body.refreshTokens
+  const incomingRefreshToken=req.cookies.refreshToken || req.body.refreshToken
   if(!incomingRefreshToken){
     throw new ApiError(401,"Unauthorized refresh-token request")
   }
@@ -355,16 +355,34 @@ const updateUserInterests=asyncHandler(async(req,res)=>{
   if (!Array.isArray(interests) || interests.length === 0) {
     throw new ApiError(400, "At least one interest must be selected");
   }
-
+console.log(interests)
   const user = await User.findByIdAndUpdate(
     req.user._id,
-    { $set: { interests } },
+     { interests },
     { new: true }
   ).select("-password -refreshTokens");
 
   return res
     .status(200)
     .json(new ApiResponse(200, user, "Interests updated successfully"));
+})
+
+const updateUserRoleBySuperAdmin=asyncHandler(async(req,res)=>{
+  const {id}=req.params
+  const {role}=req.body
+
+  const user=await User.findByIdAndUpdate(id,{role}, { new: true, validateBeforeSave: false })
+  .select("-password -refreshTokens")
+
+  if (!user) {
+    throw new ApiError(404, "User not found for role updation");
+  }
+
+  return res
+  .status(200)
+  .json(
+    new ApiResponse(200, user, `User role updated to '${role}'`)
+  );
 })
 export {
   register,
@@ -374,5 +392,6 @@ export {
   getcurrentuser,
   refreshAccessToken,
   updateAccountDetails,
-  updateUserInterests
+  updateUserInterests,
+  updateUserRoleBySuperAdmin
 }

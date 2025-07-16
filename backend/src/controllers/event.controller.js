@@ -197,7 +197,7 @@ const createEvent = asyncHandler(async (req, res) => {
     // 5
     const event = await Event.create({
         club: req.user._id,
-        club_name: req.user.fullname,
+        club_name: club_name || req.user.fullname,
         event_name,
         title,
         description,
@@ -220,6 +220,17 @@ const createEvent = asyncHandler(async (req, res) => {
 
 })
 
+const getEventById=asyncHandler(async(req,res)=>{
+    const event=await Event.findById(req.params.id)
+    if(!event){
+        throw new ApiError(400,"Id of event is not fetched")
+    }
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200,event,"Event is fetched by id"))
+
+})
 
 const updateEventDetails = asyncHandler(async (req, res) => {
     const { id } = req.params
@@ -308,10 +319,27 @@ const updateEventThumbnail = asyncHandler(async (req, res) => {
 
 
 })
+
+const getMyPostedEvents =asyncHandler(async(req,res)=>{
+    
+
+    const events=await Event.find({club:req.user._id}).sort({ event_date: -1 })
+
+    if(!events){
+        throw new ApiError("My posted events not fetched")
+    }
+
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200,events,'Your posted events fetched successfully'))
+})
 export {
     getAllEvents,
     getEventsByUserInterests,
     createEvent,
     updateEventDetails,
-    updateEventThumbnail
+    updateEventThumbnail,
+    getMyPostedEvents,
+    getEventById
 }
