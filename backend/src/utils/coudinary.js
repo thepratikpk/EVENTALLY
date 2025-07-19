@@ -15,7 +15,8 @@ const uploadOnCloudinary =async(localFilePath)=>{
         }
         const response=await cloudinary.uploader.upload(localFilePath,{
             resource_type:"auto",
-            folder:"events"
+            folder:"events",
+            secure: true,
         })
         // file upload on cloudinary successfully
         console.log("File uploaded on Cloudinary!!")
