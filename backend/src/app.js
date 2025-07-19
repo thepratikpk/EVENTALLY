@@ -6,10 +6,19 @@ import { scheduleOldEventCleanup } from './utils/cleanupEvents.js';
 
 const app=express();
 
+// app.use(cors({
+//     origin:process.env.CORS_ORIGIN || 'http://localhost:5173',
+//     credentials:true
+// }))
+const allowedOrigin =
+  process.env.NODE_ENV === "production"
+    ? process.env.PROD_ORIGIN
+    : process.env.DEV_ORIGIN;
+
 app.use(cors({
-    origin:process.env.CORS_ORIGIN || 'http://localhost:5173',
-    credentials:true
-}))
+  origin: allowedOrigin,
+  credentials: true
+}));
 app.use(express.json())
 app.use(express.urlencoded({extended:true,limit:"16kb"}))
 app.use(express.static("public"))
