@@ -21,17 +21,18 @@ export const useAuthStore = create((set) => ({
   },
 
   register: async (data) => {
-    set({ isSigningUp: true });
-    try {
-      await API.post('/auth/register', data);
-      toast.success("Registered successfully");
-    } catch (err) {
-      console.log(err);
-      toast.error(err.response?.data?.message || "Registration failed");
-    } finally {
-      set({ isSigningUp: false });
-    }
-  },
+  set({ isSigningUp: true });
+  try {
+    const res = await API.post('/auth/register', data);
+    toast.success("Registered successfully");
+    return res.data;
+  } catch (err) {
+    throw err; // let the caller handle error toast
+  } finally {
+    set({ isSigningUp: false });
+  }
+},
+
 
   login: async (data) => {
     set({ isLoggedin: true });

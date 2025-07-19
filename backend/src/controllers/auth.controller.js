@@ -170,10 +170,10 @@ if(password.length<6){
   if(!createdUser){
     throw new ApiError(500,"Somthing wnet wrong while registering the user")
   }
-  console.log("registered:",createdUser)
+  
   return res
   .status(201)
-  .json(new ApiResponse(200,createdUser,"User Registered Successfully"))
+  .json(new ApiResponse(201,createdUser,"User Registered Successfully"))
 
 
 })

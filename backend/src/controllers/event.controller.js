@@ -133,7 +133,7 @@ const getAllEvents = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Failed to fetch events")
     }
 
-    console.log("Number of Events:", events.length)
+    
 
     return res
         .status(200)
