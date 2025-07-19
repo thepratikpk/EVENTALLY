@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import cookieParser from 'cookie-parser';
+import { scheduleOldEventCleanup } from './utils/cleanupEvents.js';
 
 
 const app=express();
@@ -14,6 +15,8 @@ app.use(express.urlencoded({extended:true,limit:"16kb"}))
 app.use(express.static("public"))
 
 app.use(cookieParser())
+
+scheduleOldEventCleanup();
 
 import authRouter from './routes/auth.route.js'
 import eventRouter from './routes/event.route.js'

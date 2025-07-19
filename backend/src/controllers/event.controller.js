@@ -334,6 +334,35 @@ const getMyPostedEvents =asyncHandler(async(req,res)=>{
     .status(200)
     .json(new ApiResponse(200,events,'Your posted events fetched successfully'))
 })
+
+const deleteEvent = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+
+    const event = await Event.findById(id);
+    if (!event) {
+        throw new ApiError(404, "Event not found");
+    }
+
+    // Ensure the user owns the event
+    if (event.club.toString() !== req.user._id.toString()) {
+        throw new ApiError(403, "You are not authorized to delete this event");
+    }
+
+    // Delete the thumbnail from Cloudinary if exists
+    if (event.thumbnail) {
+        const publicId = getPublicIdFromUrl(event.thumbnail);
+        if (publicId) {
+            await deleteFromCloudinary(publicId);
+        }
+    }
+
+    await event.deleteOne();
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, null, "Event deleted successfully"));
+});
+
 export {
     getAllEvents,
     getEventsByUserInterests,
@@ -341,5 +370,6 @@ export {
     updateEventDetails,
     updateEventThumbnail,
     getMyPostedEvents,
-    getEventById
+    getEventById,
+    deleteEvent
 }

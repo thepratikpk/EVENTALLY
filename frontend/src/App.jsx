@@ -13,36 +13,41 @@ import EditEvent from './pages/EditEvents';
 import EventDetails from './pages/EventDetails';
 import UserRoleManager from './pages/UserRoleManager';
 
-
 const App = () => {
-  const {isCheckingAuth, checkAuth, authUser } = useAuthStore();
+  const { isCheckingAuth, checkAuth, authUser } = useAuthStore();
 
   useEffect(() => {
-    checkAuth(); // runs on app load
+    checkAuth(); // run on app load
   }, []);
 
-  const requireAdmin = (children) => {
-    if (!authUser || !['admin', 'superadmin'].includes(authUser.role)) {
-      return <Navigate to="/" />;
+  // Guard: wait until auth is checked before rendering any protected routes
+  const requireAuthCheck = (child) => {
+    if (isCheckingAuth) {
+      return <div className="h-screen flex justify-center items-center text-white">Checking authentication...</div>;
     }
-    return children;
+    return child;
   };
 
-const requireSuperAdmin = (children) => {
-  if (isCheckingAuth) {
-    return <div className="h-screen flex justify-center items-center text-white">Checking auth...</div>;
-  }
+  const requireAdmin = (children) => {
+    return requireAuthCheck(
+      !authUser || !['admin', 'superadmin'].includes(authUser.role)
+        ? <Navigate to="/" />
+        : children
+    );
+  };
 
-  if (!authUser || authUser.role !== 'superadmin') {
-    return <Navigate to="/" />;
-  }
-
-  return children;
-};
+  const requireSuperAdmin = (children) => {
+    return requireAuthCheck(
+      !authUser || authUser.role !== 'superadmin'
+        ? <Navigate to="/" />
+        : children
+    );
+  };
 
   return (
     <div>
-      <Navbar />
+      {/* Optional Navbar */}
+      {/* <Navbar /> */}
       <ToasterProvider />
       <Routes>
         <Route path="/" element={<Hero />} />

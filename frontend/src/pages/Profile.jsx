@@ -1,3 +1,4 @@
+// src/pages/Profile.jsx
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../store/useAuth';
 import { API } from '../lib/axios';
@@ -9,18 +10,18 @@ import {
   FaUserTag,
   FaStar,
   FaRegEdit,
+  FaTools,
+  FaPlusCircle,
+  FaUsersCog,
+  FaSave,
+  FaArrowLeft,
 } from 'react-icons/fa';
 import SpotlightCard from '../components/SpotlightCard';
-import TrueFocus from '../components/TrueFocus'; // ✅ Adjust path if needed
+import TrueFocus from '../components/TrueFocus';
 
 const interestsList = [
-  'technical',
-  'cultural',
-  'sports',
-  'literary',
-  'workshop',
-  'seminar',
-  'others',
+  'technical', 'cultural', 'sports', 'literary',
+  'workshop', 'seminar', 'others',
 ];
 
 const Profile = () => {
@@ -38,14 +39,9 @@ const Profile = () => {
 
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => { checkAuth(); }, []);
   useEffect(() => {
-    checkAuth();
-  }, []);
-
-  useEffect(() => {
-    if (!isCheckingAuth && !authUser) {
-      navigate('/login');
-    }
+    if (!isCheckingAuth && !authUser) navigate('/login');
   }, [isCheckingAuth, authUser]);
 
   useEffect(() => {
@@ -62,7 +58,7 @@ const Profile = () => {
 
   const toggleInterest = (interest) => {
     const updated = form.interests.includes(interest)
-      ? form.interests.filter((i) => i !== interest)
+      ? form.interests.filter(i => i !== interest)
       : [...form.interests, interest];
     setForm({ ...form, interests: updated });
   };
@@ -93,7 +89,7 @@ const Profile = () => {
 
       toast.success('Profile updated');
       setEditMode(false);
-      setForm((prev) => ({
+      setForm(prev => ({
         ...prev,
         oldPassword: '',
         newPassword: '',
@@ -108,7 +104,7 @@ const Profile = () => {
 
   if (isCheckingAuth || !authUser) {
     return (
-      <div className="flex justify-center items-center h-screen text-lg font-semibold">
+      <div className="flex justify-center items-center h-screen text-lg font-semibold text-white">
         Loading profile...
       </div>
     );
@@ -116,13 +112,22 @@ const Profile = () => {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-black overflow-hidden">
+      {/* Back Button */}
+      <button
+        onClick={() => navigate(-1)}
+        className="absolute top-6 left-6 flex items-center text-white hover:text-blue-500 transition z-20"
+      >
+        <FaArrowLeft className="mr-2" />
+        Back
+      </button>
+
       <motion.div
         className="relative z-10 w-full max-w-md"
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <SpotlightCard spotlightColor="rgba(255,255,255,0.15)">
+        <SpotlightCard spotlightColor="rgba(255,255,255,0.1)">
           <div className="flex flex-col items-center gap-4 text-center">
             {editMode ? (
               <>
@@ -131,7 +136,7 @@ const Profile = () => {
                   name="fullname"
                   value={form.fullname}
                   onChange={handleChange}
-                  className="text-xl font-bold text-center border rounded p-1 text-gray-700"
+                  className="text-xl font-bold text-center bg-zinc-900 text-white px-3 py-2 rounded w-full border border-zinc-700 focus:outline-none focus:ring focus:ring-blue-500"
                 />
                 <p className="text-sm text-gray-500">@{authUser.username}</p>
               </>
@@ -152,34 +157,31 @@ const Profile = () => {
             )}
           </div>
 
-          <div className="mt-6 space-y-4 text-white">
-            {/* Email */}
+          <div className="mt-6 space-y-4 text-white/80">
             <div className="flex items-center gap-3">
-              <FaEnvelope className="text-blue-400" />
+              <FaEnvelope className="text-white/70" />
               {editMode ? (
                 <input
                   type="email"
                   name="email"
                   value={form.email}
                   onChange={handleChange}
-                  className="flex-1 p-1 border rounded text-sm text-black"
+                  className="flex-1 p-2 bg-zinc-900 border border-zinc-700 text-white rounded focus:outline-none focus:ring focus:ring-blue-500"
                 />
               ) : (
                 <span>{authUser.email}</span>
               )}
             </div>
 
-            {/* Role */}
             <div className="flex items-center gap-3">
-              <FaStar className="text-yellow-400" />
+              <FaStar className="text-white/70" />
               <span className="capitalize">{authUser.role || 'user'}</span>
             </div>
 
-            {/* Interests */}
             <div className="flex items-start gap-3">
-              <FaUserTag className="text-purple-500 mt-1" />
+              <FaUserTag className="text-white/70 mt-1" />
               <div className="flex-1">
-                <p className="font-semibold">Interests:</p>
+                <p className="font-semibold text-white/80">Interests:</p>
                 {editMode ? (
                   <div className="flex flex-wrap gap-2 mt-2">
                     {interestsList.map((interest) => (
@@ -189,7 +191,7 @@ const Profile = () => {
                         className={`px-3 py-1 rounded-full text-sm cursor-pointer transition border ${
                           form.interests.includes(interest)
                             ? 'bg-blue-500 text-white border-blue-500'
-                            : 'bg-gray-100 text-gray-600 border-gray-300'
+                            : 'bg-zinc-800 text-gray-400 border-zinc-700'
                         }`}
                       >
                         {interest}
@@ -206,7 +208,6 @@ const Profile = () => {
               </div>
             </div>
 
-            {/* Password */}
             {editMode && (
               <div className="mt-4 space-y-2">
                 <input
@@ -215,7 +216,7 @@ const Profile = () => {
                   value={form.oldPassword}
                   onChange={handleChange}
                   placeholder="Current password"
-                  className="w-full p-2 bg-gray-100 border border-gray-300 rounded text-sm text-black"
+                  className="w-full p-2 bg-zinc-900 border border-zinc-700 text-white rounded focus:outline-none focus:ring focus:ring-blue-500"
                 />
                 <input
                   type="password"
@@ -223,26 +224,26 @@ const Profile = () => {
                   value={form.newPassword}
                   onChange={handleChange}
                   placeholder="New password (min 6 chars)"
-                  className="w-full p-2 bg-gray-100 border border-gray-300 rounded text-sm text-black"
+                  className="w-full p-2 bg-zinc-900 border border-zinc-700 text-white rounded focus:outline-none focus:ring focus:ring-blue-500"
                 />
               </div>
             )}
           </div>
 
-          {/* Buttons */}
-          <div className="mt-6 flex flex-wrap justify-center gap-4">
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
             {editMode ? (
               <button
                 onClick={handleSave}
-                className="flex items-center gap-2 text-sm bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
+                className="flex items-center gap-2 text-sm border border-white/30 text-white px-4 py-2 rounded-md hover:border-white hover:bg-white/10 transition"
                 disabled={loading}
               >
+                <FaSave />
                 {loading ? 'Saving...' : 'Save Changes'}
               </button>
             ) : (
               <button
                 onClick={() => setEditMode(true)}
-                className="flex items-center gap-2 text-sm bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
+                className="flex items-center gap-2 text-sm border border-white/30 text-white px-4 py-2 rounded-md hover:border-white hover:bg-white/10 transition"
               >
                 <FaRegEdit />
                 Edit Profile
@@ -250,30 +251,32 @@ const Profile = () => {
             )}
 
             {['admin', 'superadmin'].includes(authUser.role) && (
-  <>
-    <button
-      onClick={() => navigate('/managed-events')}
-      className="text-sm bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition"
-    >
-      Manage Events
-    </button>
-    <button
-      onClick={() => navigate('/create-event')}
-      className="text-sm bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
-    >
-      Post Event
-    </button>
-    {authUser.role === 'superadmin' && (
-      <button
-        onClick={() => navigate('/users/superadmin')}
-        className="text-sm bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
-      >
-        Manage Users
-      </button>
-    )}
-  </>
-)}
-
+              <>
+                <button
+                  onClick={() => navigate('/managed-events')}
+                  className="flex items-center gap-2 text-sm border border-white/30 text-white px-4 py-2 rounded-md hover:border-white hover:bg-white/10 transition"
+                >
+                  <FaTools />
+                  Manage Events
+                </button>
+                <button
+                  onClick={() => navigate('/create-event')}
+                  className="flex items-center gap-2 text-sm border border-white/30 text-white px-4 py-2 rounded-md hover:border-white hover:bg-white/10 transition"
+                >
+                  <FaPlusCircle />
+                  Post Event
+                </button>
+                {authUser.role === 'superadmin' && (
+                  <button
+                    onClick={() => navigate('/users/superadmin')}
+                    className="flex items-center gap-2 text-sm border border-white/30 text-white px-4 py-2 rounded-md hover:border-white hover:bg-white/10 transition"
+                  >
+                    <FaUsersCog />
+                    Manage Users
+                  </button>
+                )}
+              </>
+            )}
           </div>
         </SpotlightCard>
       </motion.div>

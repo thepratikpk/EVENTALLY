@@ -1,25 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { API } from '../lib/axios';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useAuthStore } from '../store/useAuth';
 
 const interestsList = [
-  'technical',
-  'cultural',
-  'sports',
-  'literary',
-  'workshop',
-  'seminar',
-  'others',
+  'technical', 'cultural', 'sports', 'literary', 'workshop', 'seminar', 'others',
 ];
 
 const CreateEvent = () => {
   const navigate = useNavigate();
-  const { authUser } = useAuthStore();
+  const { authUser, isCheckingAuth, checkAuth } = useAuthStore();
+
+  useEffect(() => {
+    checkAuth(); // Check auth on page mount
+  }, []);
+
+  useEffect(() => {
+    if (!isCheckingAuth && !authUser) {
+      navigate('/');
+    }
+  }, [isCheckingAuth, authUser]);
 
   const [form, setForm] = useState({
-    club_name: authUser?.fullname || '',
+    club_name: '',
     event_name: '',
     title: '',
     description: '',
@@ -30,6 +34,15 @@ const CreateEvent = () => {
     domains: [],
     thumbnail: null,
   });
+
+  useEffect(() => {
+    if (authUser) {
+      setForm((prev) => ({
+        ...prev,
+        club_name: authUser.fullname,
+      }));
+    }
+  }, [authUser]);
 
   const [loading, setLoading] = useState(false);
 
@@ -75,7 +88,7 @@ const CreateEvent = () => {
 
     setLoading(true);
     try {
-      const res = await API.post('/events/admin', eventData, {
+      await API.post('/events/admin', eventData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
@@ -225,7 +238,7 @@ const CreateEvent = () => {
           </div>
         </div>
 
-        {/* Thumbnail Upload + Preview */}
+        {/* Thumbnail Upload */}
         <div>
           <label className="block font-semibold mb-2 text-sm">Thumbnail Image</label>
           <input
@@ -247,7 +260,7 @@ const CreateEvent = () => {
           )}
         </div>
 
-        {/* Submit Button */}
+        {/* Submit */}
         <button
           type="submit"
           disabled={loading}

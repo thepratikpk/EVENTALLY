@@ -63,8 +63,8 @@ const Hero = () => {
         {/* Radial background */}
         <div className="fixed top-0 left-0 -z-20 h-screen w-screen bg-neutral-950 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]" />
 
-        {/* MetaBalls right half */}
-        <div className="absolute inset-0 z-0 pointer-events-auto">
+        {/* MetaBalls right half - hidden on small devices */}
+        <div className="hidden md:block absolute inset-0 z-0 pointer-events-auto">
           <div className="w-1/2 h-full ml-auto">
             <MetaBalls
               color="#ffffff"
@@ -81,9 +81,8 @@ const Hero = () => {
           </div>
         </div>
 
-
         {/* Content */}
-        <div className="-z-10 px-40 w-full flex flex-col md:flex-row justify-between items-center">
+        <div className="-z-10 px-6 md:px-40 w-full flex flex-col md:flex-row justify-between items-center">
           {/* Left: TrueFocus Title */}
           <div className="md:w-1/2 w-full flex justify-center md:justify-start">
             <TrueFocus
@@ -94,7 +93,7 @@ const Hero = () => {
               glowColor="rgba(255, 0, 0, 0.6)"
               animationDuration={2}
               pauseBetweenAnimations={0.75}
-              fontSize="5rem"
+              fontSize="5rem "
             />
           </div>
         </div>
@@ -102,7 +101,7 @@ const Hero = () => {
 
       {/* Interest-Based Events */}
       {authUser && interestEvents.length > 0 && (
-        <div className="w-full  text-gray-800 px-4 py-16 md:px-12">
+        <div className="w-full text-gray-800 px-4 py-16 md:px-12">
           <h2 className="text-3xl font-bold text-center mb-10 text-blue-600">
             Events Based on Your Interests
           </h2>

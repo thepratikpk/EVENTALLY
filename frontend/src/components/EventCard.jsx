@@ -33,7 +33,7 @@ const EventCard = ({ id, title, club_name, thumbnail }) => {
       onClick={() => navigate(`/event/${id}`)}
       className="cursor-pointer max-w-sm w-full mx-auto"
     >
-      <div className="relative h-[260px] w-full overflow-hidden rounded-2xl shadow-md group">
+      <div className="relative h-[260px] w-full overflow-hidden rounded-2xl shadow-md group transition duration-300 hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:bg-white/5">
         {/* Image */}
         <img
           src={thumbnail || seminarImg}
@@ -47,8 +47,8 @@ const EventCard = ({ id, title, club_name, thumbnail }) => {
         {/* Bottom text */}
         <div className="absolute bottom-0 left-0 right-0 px-4 pb-3 z-10 text-white">
           <h3 className="text-lg font-bold leading-tight">{title}</h3>
-          <p className="text-sm">
-            Hosted by <span className="font-semibold">{club_name}</span>
+          <p className="text-sm text-gray-300">
+            Hosted by <span className="font-semibold text-white">{club_name}</span>
           </p>
         </div>
       </div>

@@ -4,7 +4,7 @@ const getAllEvents=async()=>{
     try {
         const res=await API.get('/events')
         return res.data.data
-    } catch (error) {
+    } catch (err) {
          console.error("Failed to fetch events", err);
     throw err;
     }

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createEvent, getAllEvents, getEventById, getEventsByUserInterests, getMyPostedEvents, updateEventDetails, updateEventThumbnail, } from "../controllers/event.controller.js";
+import { createEvent, deleteEvent, getAllEvents, getEventById, getEventsByUserInterests, getMyPostedEvents, updateEventDetails, updateEventThumbnail, } from "../controllers/event.controller.js";
 import { authorizeRoles, verifyJWT } from "../middleware/auth.middleware.js";
 import { upload } from "../middleware/multer.middleware.js";
 const router = Router()
@@ -43,6 +43,8 @@ router.route('/admin/:id/thumbnail').patch(upload.fields([
         maxCount: 1
     }
 ]),updateEventThumbnail)
+
+router.route('/admin/:id').delete(authorizeRoles('admin', 'superadmin'), deleteEvent);
 
 
 export default router
