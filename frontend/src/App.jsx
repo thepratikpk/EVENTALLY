@@ -12,6 +12,7 @@ import ManageEvents from './pages/ManangeEvents';
 import EditEvent from './pages/EditEvents';
 import EventDetails from './pages/EventDetails';
 import UserRoleManager from './pages/UserRoleManager';
+import About from './pages/About';
 
 const App = () => {
   const { isCheckingAuth, checkAuth, authUser } = useAuthStore();
@@ -52,6 +53,7 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Hero />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path='/about' element={<About/>}/>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/event/:id" element={<EventDetails />} />
