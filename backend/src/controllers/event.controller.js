@@ -206,7 +206,7 @@ const createEvent = asyncHandler(async (req, res) => {
         venue,
         domains,
         registration_link,
-        thumbnail: thumbnail?.url || "",
+        thumbnail: thumbnail?.secure_url || "",
         isApproved: false
 
     })
@@ -309,7 +309,7 @@ const updateEventThumbnail = asyncHandler(async (req, res) => {
 
     const updatedthumbnail = await uploadOnCloudinary(localThumbnailPath)
 
-    event.thumbnail = updatedthumbnail.url
+    event.thumbnail = updatedthumbnail.secure_url
     await event.save({ validateBeforeSave:false })
 
     return res
