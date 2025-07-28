@@ -6,7 +6,7 @@ import seminarImg from "../assets/seminar.png";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const EventCard = ({ id, title, club_name, thumbnail }) => {
+const EventCard = ({ id, title, club_name, thumbnail, description, event_date, time, venue, registration_link }) => {
   const navigate = useNavigate();
   const cardRef = useRef(null);
 
@@ -27,10 +27,26 @@ const EventCard = ({ id, title, club_name, thumbnail }) => {
     );
   }, []);
 
+  const handleCardClick = () => {
+    navigate(`/event/${id}`, {
+      state: {
+        id,
+        title,
+        club_name,
+        thumbnail,
+        description,
+        event_date,
+        time,
+        venue,
+        registration_link,
+      },
+    });
+  };
+
   return (
     <div
       ref={cardRef}
-      onClick={() => navigate(`/event/${id}`)}
+      onClick={handleCardClick}
       className="cursor-pointer max-w-sm w-full mx-auto"
     >
       <div className="relative h-[260px] w-full overflow-hidden rounded-2xl shadow-md group transition duration-300 hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:bg-white/5">

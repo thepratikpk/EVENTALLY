@@ -11,25 +11,67 @@ const Hero = () => {
   const [interestEvents, setInterestEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
-  const { authUser } = useAuthStore();
+  const { authUser, isCheckingAuth, checkAuth } = useAuthStore(); // Destructure isCheckingAuth
 
+  // Effect to fetch ALL events immediately on component mount
   useEffect(() => {
-    const fetchEvents = async () => {
+    let isMounted = true; // Flag to prevent state updates on unmounted component
+
+    const fetchAllEventsData = async () => {
+      setLoading(true); // Start loading indicator
       try {
-        const [all, interest] = await Promise.all([
-          getAllEvents(),
-          authUser ? getEventsByUserInterests() : [],
-        ]);
-        setAllEvents(all || []);
-        setInterestEvents(interest || []);
+        const all = await getAllEvents();
+        if (isMounted) {
+          setAllEvents(all || []);
+        }
       } catch (err) {
-        console.error("Failed to fetch events:", err);
+        console.error("Failed to fetch all events:", err);
+        // Optionally set an error state here
       } finally {
-        setLoading(false);
+        // Do NOT set loading to false here, as interestEvents might still be loading
       }
     };
-    fetchEvents();
-  }, [authUser]);
+
+    fetchAllEventsData();
+
+    return () => {
+      isMounted = false; // Cleanup function to set flag on unmount
+    };
+  }, []); // Empty dependency array means this runs once on mount
+
+  // Effect to fetch interest-based events after auth status is determined
+  useEffect(() => {
+    let isMounted = true; // Flag for this specific effect
+
+    const fetchInterestEventsData = async () => {
+      // Only proceed if authentication check is complete
+      if (!isCheckingAuth) {
+        if (authUser) { // If user is authenticated, fetch interest events
+          try {
+            const interest = await getEventsByUserInterests();
+            if (isMounted) {
+              setInterestEvents(interest || []);
+            }
+          } catch (err) {
+            console.error("Failed to fetch interest events:", err);
+          }
+        }
+        // Set loading to false once all relevant fetches (all events + interest events if applicable) are done
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchInterestEventsData();
+
+    return () => {
+      isMounted = false; // Cleanup for this effect
+    };
+    // Dependencies: This effect runs when isCheckingAuth changes (from true to false)
+    // or when authUser changes (e.g., from null to user object after login/refresh)
+  }, [isCheckingAuth, authUser]);
+
 
   const renderEventsGrid = (events) => (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -77,7 +119,7 @@ const Hero = () => {
               hoverSmoothness={0.05}
               clumpFactor={1}
               speed={0.3}
-            />
+              />
           </div>
         </div>
 
@@ -94,7 +136,7 @@ const Hero = () => {
               animationDuration={2}
               pauseBetweenAnimations={0.75}
               fontSize="5rem "
-            />
+              />
           </div>
         </div>
       </div>

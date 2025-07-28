@@ -1,6 +1,6 @@
 // src/pages/EventDetails.jsx
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom'; // Import useLocation
 import { API } from '../lib/axios';
 import {
   FaCalendarAlt,
@@ -12,25 +12,41 @@ import {
 const EventDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [event, setEvent] = useState(null);
+  const location = useLocation(); // Get location object to access state
+
+  // Initialize event state with data from location.state if available
+  // This provides immediate content for perceived performance
+  const [event, setEvent] = useState(location.state || null);
+  const [loading, setLoading] = useState(!location.state); // Set loading true only if no initial state
 
   useEffect(() => {
     const fetchEvent = async () => {
+      setLoading(true); // Ensure loading is true when starting fetch
       try {
         const res = await API.get(`/events/${id}`);
-        setEvent(res.data.data);
+        setEvent(res.data.data); // Update with full, fresh data from API
       } catch (err) {
         console.error('Error fetching event:', err);
+        // Optionally, navigate back or show an error message if event not found
+        // navigate('/', { replace: true });
+      } finally {
+        setLoading(false); // Set loading to false after fetch attempt
       }
     };
 
+    // Always fetch to ensure data is fresh and complete, even if initial state exists
     fetchEvent();
-  }, [id]);
+  }, [id]); // Dependency on id ensures refetch if ID changes
 
-  if (!event)
+  // Display a loading state if event data is not yet available
+  if (loading || !event) {
     return (
-      <div className="text-center py-20 text-white">Loading event...</div>
+      <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
+        <div className="animate-spin h-10 w-10 border-4 border-blue-500 border-t-transparent rounded-full" />
+        <p className="ml-4 text-white text-lg">Loading event details...</p>
+      </div>
     );
+  }
 
   return (
     <div className="min-h-screen bg-neutral-950 relative text-white px-4 py-10 sm:px-8 md:px-16 lg:px-24">
@@ -40,7 +56,7 @@ const EventDetails = () => {
       {/* Back Arrow */}
       <button
         onClick={() => navigate(-1)}
-        className="absolute top-6 left-6 flex items-center text-gray-400 hover:text-white transition"
+        className="absolute top-6 left-6 flex items-center text-gray-400 hover:text-white transition z-10"
       >
         <FaArrowLeft className="mr-2" />
         Back

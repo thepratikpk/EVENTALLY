@@ -164,19 +164,10 @@ const getEventsByUserInterests = asyncHandler(async (req, res) => {
 
 
 const createEvent = asyncHandler(async (req, res) => {
-    // get details from frontend
-    // validation of details
-    // get thumbnail form req body
-    // upload the thumbnail to cloudinary
-    // crete events in db
-    // return res
-
-    // 1
     const { club_name, event_name, title,
         description, event_date, time, venue, domains,
         registration_link } = req.body
 
-    // 2
     if (
         !event_name ||
         !title ||
@@ -189,35 +180,38 @@ const createEvent = asyncHandler(async (req, res) => {
         throw new ApiError(400, "All required fields must be provided");
     }
 
-    //   3
+    let fullEventDate;
+    try {
+        fullEventDate = new Date(`${event_date} ${time}`);
+        
+        if (isNaN(fullEventDate.getTime())) {
+            throw new ApiError(400, "Invalid event date or time format provided.");
+        }
+    } catch (parseError) {
+        throw new ApiError(400, "Error parsing event date/time: " + parseError.message);
+    }
 
     const localThumbnailPath = req.files?.thumbnail?.[0]?.path
-    // 4
     const thumbnail = await uploadOnCloudinary(localThumbnailPath)
-    // 5
+
     const event = await Event.create({
         club: req.user._id,
         club_name: club_name || req.user.fullname,
         event_name,
         title,
         description,
-        event_date,
+        event_date: fullEventDate,
         time,
         venue,
         domains,
         registration_link,
         thumbnail: thumbnail?.secure_url || "",
         isApproved: false
-
     })
-
-    // 6
 
     return res
         .status(200)
         .json(new ApiResponse(200, event, "Event is Created"))
-
-
 })
 
 const getEventById=asyncHandler(async(req,res)=>{
@@ -238,13 +232,12 @@ const updateEventDetails = asyncHandler(async (req, res) => {
         event_name,
         title,
         description,
-        event_date,
-        time,
+        event_date, // This is the date string
+        time,       // This is the time string
         venue,
         domains,
         registration_link,
     } = req.body;
-
 
     const existingEvent = await Event.findById(id)
 
@@ -252,23 +245,42 @@ const updateEventDetails = asyncHandler(async (req, res) => {
         throw new ApiError(403, "You are not authorized to update this event");
     }
 
-    const updatedEvent = await Event.findByIdAndUpdate(id, {
-        $set: {
-            event_name,
-            title,
-            description,
-            event_date,
-            time,
-            venue,
-            registration_link,
-            domains,
-            isApproved: false,
+    // --- IMPORTANT CHANGE HERE ---
+    let updatedFullEventDate;
+    if (event_date && time) { // Only attempt to parse if both are provided
+        try {
+            updatedFullEventDate = new Date(`${event_date} ${time}`);
+            if (isNaN(updatedFullEventDate.getTime())) {
+                throw new ApiError(400, "Invalid event date or time format provided for update.");
+            }
+        } catch (parseError) {
+            throw new ApiError(400, "Error parsing event date/time for update: " + parseError.message);
         }
+    }
+    // --- END IMPORTANT CHANGE ---
+
+    const updateFields = {
+        event_name,
+        title,
+        description,
+        time,
+        venue,
+        registration_link,
+        domains,
+        isApproved: false,
+    };
+
+    if (updatedFullEventDate) {
+        updateFields.event_date = updatedFullEventDate; // <--- Use this combined Date object
+    }
+
+
+    const updatedEvent = await Event.findByIdAndUpdate(id, {
+        $set: updateFields
     },
         {
             new: true, runValidators: true
         }
-
     )
 
     return res
