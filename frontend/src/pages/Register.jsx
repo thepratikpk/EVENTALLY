@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { FaUserAlt, FaEnvelope, FaLock, FaUserEdit } from 'react-icons/fa';
 import { MdOutlineInterests } from 'react-icons/md';
+import { FcGoogle } from 'react-icons/fc';
 import { useAuthStore } from '../store/useAuth';
 
 const interestsOptions = [
@@ -41,8 +42,13 @@ const Register = () => {
       return;
     }
 
+    if (form.interests.length === 0) {
+      toast.error("Please select at least one interest.");
+      return;
+    }
+
     try {
-      const { confirmPassword, ...payload } = form; // remove confirmPassword
+      const { confirmPassword, ...payload } = form;
       await register(payload);
       navigate('/login');
     } catch (err) {
@@ -54,7 +60,6 @@ const Register = () => {
 
   return (
     <div className="flex h-screen bg-gradient-to-r from-sky-100 to-white overflow-hidden">
-      {/* Left Animation Panel */}
       <motion.div 
         className="hidden md:flex w-1/2 items-center justify-center relative"
         initial={{ opacity: 0, x: -50 }}
@@ -75,7 +80,6 @@ const Register = () => {
           Join Our Event Community
         </motion.div>
 
-        {/* Floating Shapes */}
         <motion.div className="absolute w-20 h-20 bg-blue-300 opacity-30 rounded-full top-10 left-10"
           animate={{ y: [0, 20, 0] }} transition={{ repeat: Infinity, duration: 4 }} />
         <motion.div className="absolute w-32 h-32 bg-purple-200 opacity-20 rounded-full bottom-20 left-20"
@@ -84,7 +88,6 @@ const Register = () => {
           animate={{ rotate: [0, 360] }} transition={{ repeat: Infinity, duration: 10, ease: "linear" }} />
       </motion.div>
 
-      {/* Right Form Panel */}
       <div className="flex w-full md:w-1/2 items-center justify-center p-6">
         <motion.div
           className="w-full max-w-md bg-white p-8 rounded-xl shadow-2xl"
@@ -95,7 +98,6 @@ const Register = () => {
           <h2 className="text-3xl font-bold text-center mb-6 text-blue-700">Register</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Fullname */}
             <div className="relative">
               <FaUserEdit className="absolute top-3 left-3 text-gray-400" />
               <input type="text" name="fullname" placeholder="Full Name"
@@ -104,7 +106,6 @@ const Register = () => {
                 required />
             </div>
 
-            {/* Username */}
             <div className="relative">
               <FaUserAlt className="absolute top-3 left-3 text-gray-400" />
               <input type="text" name="username" placeholder="Username"
@@ -113,7 +114,6 @@ const Register = () => {
                 required />
             </div>
 
-            {/* Email */}
             <div className="relative">
               <FaEnvelope className="absolute top-3 left-3 text-gray-400" />
               <input type="email" name="email" placeholder="Email"
@@ -122,7 +122,6 @@ const Register = () => {
                 required />
             </div>
 
-            {/* Password */}
             <div className="relative">
               <FaLock className="absolute top-3 left-3 text-gray-400" />
               <input type="password" name="password" placeholder="Password"
@@ -131,7 +130,6 @@ const Register = () => {
                 required />
             </div>
 
-            {/* Confirm Password */}
             <div className="relative">
               <FaLock className="absolute top-3 left-3 text-gray-400" />
               <input type="password" name="confirmPassword" placeholder="Confirm Password"
@@ -140,7 +138,6 @@ const Register = () => {
                 required />
             </div>
 
-            {/* Interests */}
             <div>
               <label className="flex items-center gap-2 mb-2 text-sm font-semibold text-gray-700">
                 <MdOutlineInterests />
@@ -153,8 +150,8 @@ const Register = () => {
                     whileHover={{ scale: 1.1 }}
                     className={`cursor-pointer px-3 py-1 rounded-full border transition 
                       ${form.interests.includes(interest)
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-white text-gray-700 border-gray-300'}`}
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white text-gray-700 border-gray-300'}`}
                     onClick={() => toggleInterest(interest)}
                   >
                     {interest}
@@ -163,7 +160,6 @@ const Register = () => {
               </div>
             </div>
 
-            {/* Submit */}
             <motion.button
               type="submit"
               className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition duration-300"
@@ -173,6 +169,18 @@ const Register = () => {
               Register
             </motion.button>
           </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-gray-600 text-sm">
+              Already have an account or prefer Google?{" "}
+              <Link to="/login" className="text-blue-600 hover:underline font-semibold">
+                Login here
+              </Link>
+            </p>
+            <p className="text-gray-600 text-sm mt-2">
+              (Google Sign-In is available on the login page)
+            </p>
+          </div>
         </motion.div>
       </div>
     </div>

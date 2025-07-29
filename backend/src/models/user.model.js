@@ -14,8 +14,8 @@ const userSchema = new mongoose.Schema(
         fullname: {
             type: String,
             required: true,
-           
-        
+
+
             trim: true,
             index: true
         },
@@ -28,21 +28,31 @@ const userSchema = new mongoose.Schema(
         },
         password: {
             type: String,
-            required: true,
-            minlength: 6,
+            // Password is required only if the user is NOT a Google user
+            required: function () { return !this.isGoogleUser; }
         },
         interests: [{ type: String }],  // Array to store user interests
 
         role: {
             type: String,
-            enum: ['student','superadmin', 'admin'],
+            enum: ['student', 'superadmin', 'admin'],
             default: 'student'
         },
 
 
         refreshTokens: {
             type: String
+        },
+        googleId: {
+            type: String,
+            unique: true,
+            sparse: true
+        },
+        isGoogleUser: {
+            type: Boolean,
+            default: false
         }
+
     },
     { timestamps: true }
 

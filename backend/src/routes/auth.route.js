@@ -2,7 +2,7 @@
 import { Router } from 'express'
 
 import { authorizeRoles, verifyJWT } from '../middleware/auth.middleware.js'
-import { changecurrentPassword, getcurrentuser, login, logout, refreshAccessToken, register, searchUserByUsername, updateAccountDetails, updateUserInterests, updateUserRoleBySuperAdmin } from '../controllers/auth.controller.js'
+import { changecurrentPassword, getcurrentuser, googleLogin, login, logout, refreshAccessToken, register, searchUserByUsername, updateAccountDetails, updateUserInterests, updateUserRoleBySuperAdmin } from '../controllers/auth.controller.js'
 
 const router =Router()
 //OLD
@@ -16,6 +16,7 @@ const router =Router()
 router.route('/register').post(register)
 router.route('/login').post(login)
 router.route('/refresh-token').post(refreshAccessToken)
+router.route('/google-login').post(googleLogin)
 
 // secured routes
 router.use(verifyJWT)

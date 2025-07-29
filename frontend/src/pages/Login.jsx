@@ -1,31 +1,81 @@
-import React, { useState } from "react";
-
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "react-hot-toast";
 import { FaLock, FaUserAlt } from "react-icons/fa";
 import { FiLogIn } from "react-icons/fi";
+import { FcGoogle } from "react-icons/fc";
 
 import { useAuthStore } from "../store/useAuth";
+import { API } from "../lib/axios";
 
 const Login = () => {
   const navigate = useNavigate();
-  const {login} = useAuthStore(); // <- Zustand
+  const { login, authUser } = useAuthStore();
   const [form, setForm] = useState({ username: "", password: "" });
+  const googleButtonRef = useRef(null);
+
+  useEffect(() => {
+    if (authUser) {
+      navigate("/");
+    }
+  }, [authUser, navigate]);
+
+  useEffect(() => {
+    if (window.google && window.google.accounts && window.google.accounts.id) {
+      window.google.accounts.id.initialize({
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID_FRONTEND,
+        callback: handleGoogleLoginSuccess,
+        auto_select: false,
+        cancel_on_tap_outside: true,
+      });
+
+      window.google.accounts.id.renderButton(
+        googleButtonRef.current,
+        {
+          theme: "outline",
+          size: "large",
+          text: "signin_with",
+          shape: "rectangular",
+          width: "350",
+        }
+      );
+    }
+  }, []);
+
+  const handleGoogleLoginSuccess = async (response) => {
+    const idToken = response.credential;
+    try {
+      const backendResponse = await API.post('/auth/google-login', { idToken });
+      
+      if (backendResponse.data?.data?.user) {
+        // --- FIX APPLIED HERE ---
+        // Correct way to update Zustand store state
+        useAuthStore.setState({ authUser: backendResponse.data.data.user }); 
+        // --- END FIX ---
+        toast.success("Logged in with Google successfully!");
+        navigate("/");
+      } else {
+        toast.error("Google login failed: Invalid response from server.");
+      }
+
+    } catch (err) {
+      console.error("Google login error:", err);
+      toast.error(err?.response?.data?.message || "Google login failed. Please try again.");
+    }
+  };
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const result=await login({
+      const result = await login({
         username: form.username,
         email: form.username,
         password: form.password,
       });
-  // Zustand store method
-      if(result?.data?.user||result?.user){
-        
+      if (result?.data?.user || result?.user) {
         navigate("/");
       }
     } catch (err) {
@@ -35,14 +85,12 @@ const Login = () => {
 
   return (
     <div className="flex h-screen bg-gradient-to-r from-white to-sky-100 overflow-hidden">
-      {/* Left Panel */}
       <motion.div
         className="hidden md:flex w-1/2 items-center justify-center relative"
         initial={{ opacity: 0, x: -50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 1 }}
       >
-        {/* Animated background rings */}
         <motion.div
           className="w-80 h-80 border-4 border-blue-300 rounded-full absolute animate-pulse"
           animate={{ scale: [1, 1.2, 1] }}
@@ -57,7 +105,6 @@ const Login = () => {
           Welcome Back!
         </motion.div>
 
-        {/* Floating lock icon */}
         <motion.div
           className="absolute bottom-10 left-16 text-blue-500 opacity-30"
           animate={{ y: [0, 20, 0] }}
@@ -67,7 +114,6 @@ const Login = () => {
         </motion.div>
       </motion.div>
 
-      {/* Right Form */}
       <div className="flex w-full md:w-1/2 items-center justify-center p-6">
         <motion.div
           className="w-full max-w-md bg-white p-8 rounded-xl shadow-2xl"
@@ -115,6 +161,17 @@ const Login = () => {
               Login
             </motion.button>
           </form>
+
+          <div className="mt-6 text-center">
+            <div className="relative flex items-center py-2">
+              <div className="flex-grow border-t border-gray-300"></div>
+              <span className="flex-shrink mx-4 text-gray-500 text-sm">OR</span>
+              <div className="flex-grow border-t border-gray-300"></div>
+            </div>
+            <div className="flex justify-center mt-4">
+              <div ref={googleButtonRef} className="w-full max-w-xs"></div>
+            </div>
+          </div>
         </motion.div>
       </div>
     </div>

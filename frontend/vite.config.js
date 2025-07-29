@@ -9,4 +9,10 @@ export default defineConfig({
     tailwindcss(),
     
   ],
+  server: {
+    host: true,
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin-allow-popups', // Or 'unsafe-none' if the former doesn't work
+    },
+  },
 })
