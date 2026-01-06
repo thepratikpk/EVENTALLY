@@ -72,5 +72,12 @@ const eventSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Add indexes for better query performance
+eventSchema.index({ event_date: 1 }); // For date-based sorting
+eventSchema.index({ domains: 1 }); // For domain-based filtering
+eventSchema.index({ club: 1 }); // For club-based queries
+eventSchema.index({ isApproved: 1 }); // For approval status filtering
+eventSchema.index({ event_date: 1, isApproved: 1 }); // Compound index for common queries
+
 const Event = mongoose.model("Event", eventSchema);
 export default Event;

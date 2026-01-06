@@ -4,7 +4,10 @@
   "type": "module",
   "main": "src/index.js",
   "scripts": {
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js",
+    "cleanup": "node src/scripts/cleanup.js",
+    "build": "echo 'No build step required for Node.js'"
   },
   "keywords": [],
   "author": "Pratik Kochare",

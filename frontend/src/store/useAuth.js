@@ -8,6 +8,9 @@ export const useAuthStore = create((set) => ({
   isSigningUp: false,
   isLoggedin: false,
 
+  // Setter for direct state updates (used by Google login)
+  setAuthUser: (user) => set({ authUser: user }),
+
   checkAuth: async () => {
     try {
       await API.post('/auth/refresh-token');
@@ -21,17 +24,17 @@ export const useAuthStore = create((set) => ({
   },
 
   register: async (data) => {
-  set({ isSigningUp: true });
-  try {
-    const res = await API.post('/auth/register', data);
-    toast.success("Registered successfully");
-    return res.data;
-  } catch (err) {
-    throw err; // let the caller handle error toast
-  } finally {
-    set({ isSigningUp: false });
-  }
-},
+    set({ isSigningUp: true });
+    try {
+      const res = await API.post('/auth/register', data);
+      toast.success("Registered successfully");
+      return res.data;
+    } catch (err) {
+      throw err; // let the caller handle error toast
+    } finally {
+      set({ isSigningUp: false });
+    }
+  },
 
 
   login: async (data) => {

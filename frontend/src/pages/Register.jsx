@@ -2,9 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
-import { FaUserAlt, FaEnvelope, FaLock, FaUserEdit } from 'react-icons/fa';
-import { MdOutlineInterests } from 'react-icons/md';
-import { FcGoogle } from 'react-icons/fc';
 import { useAuthStore } from '../store/useAuth';
 
 const interestsOptions = [
@@ -14,7 +11,8 @@ const interestsOptions = [
 const Register = () => {
   const navigate = useNavigate();
   const register = useAuthStore((state) => state.register);
-  
+  const [isLoading, setIsLoading] = useState(false);
+
   const [form, setForm] = useState({
     fullname: "",
     username: "",
@@ -38,151 +36,162 @@ const Register = () => {
     e.preventDefault();
 
     if (form.password !== form.confirmPassword) {
-      toast.error("Passwords do not match!");
+      toast.error("Passwords don't match");
       return;
     }
 
     if (form.interests.length === 0) {
-      toast.error("Please select at least one interest.");
+      toast.error("Please select at least one interest");
       return;
     }
 
+    setIsLoading(true);
     try {
       const { confirmPassword, ...payload } = form;
       await register(payload);
+      toast.success("Account created successfully!");
       navigate('/login');
     } catch (err) {
       console.error("Registration Error:", err);
-      const message = err?.response?.data?.message || "Registration failed";
-      toast.error(message);
+      toast.error(err?.response?.data?.message || "Registration failed");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex h-screen bg-gradient-to-r from-sky-100 to-white overflow-hidden">
-      <motion.div 
-        className="hidden md:flex w-1/2 items-center justify-center relative"
-        initial={{ opacity: 0, x: -50 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 1 }}
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+        className="w-full max-w-lg"
       >
-        <motion.div 
-          className="w-96 h-96 bg-blue-200 rounded-full absolute animate-pulse"
-          animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 12, ease: "linear" }}
-        />
-        <motion.div 
-          className="text-center z-10 text-blue-800 text-4xl font-bold"
-          initial={{ scale: 0.8 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 1 }}
-        >
-          Join Our Event Community
-        </motion.div>
+        {/* Card */}
+        <div className="bg-white border border-[#e8eaed] rounded-lg p-8 sm:p-10 shadow-sm">
+          {/* Logo */}
+          <div className="text-center mb-8">
+            <Link to="/" className="inline-block">
+              <span className="text-2xl font-semibold text-[#202124]">
+                Event<span className="text-[#1a73e8]">Ally</span>
+              </span>
+            </Link>
+            <h1 className="text-2xl font-normal text-[#202124] mt-6 mb-2">Create your account</h1>
+            <p className="text-sm text-[#5f6368]">Join EventAlly to discover events</p>
+          </div>
 
-        <motion.div className="absolute w-20 h-20 bg-blue-300 opacity-30 rounded-full top-10 left-10"
-          animate={{ y: [0, 20, 0] }} transition={{ repeat: Infinity, duration: 4 }} />
-        <motion.div className="absolute w-32 h-32 bg-purple-200 opacity-20 rounded-full bottom-20 left-20"
-          animate={{ x: [0, 30, 0] }} transition={{ repeat: Infinity, duration: 6 }} />
-        <motion.div className="absolute w-16 h-16 bg-green-300 opacity-20 rounded-full top-1/3 left-1/4"
-          animate={{ rotate: [0, 360] }} transition={{ repeat: Infinity, duration: 10, ease: "linear" }} />
-      </motion.div>
-
-      <div className="flex w-full md:w-1/2 items-center justify-center p-6">
-        <motion.div
-          className="w-full max-w-md bg-white p-8 rounded-xl shadow-2xl"
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <h2 className="text-3xl font-bold text-center mb-6 text-blue-700">Register</h2>
-
+          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="relative">
-              <FaUserEdit className="absolute top-3 left-3 text-gray-400" />
-              <input type="text" name="fullname" placeholder="Full Name"
-                value={form.fullname} onChange={handleChange}
-                className="pl-10 w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-                required />
+            {/* Name Row */}
+            <div className="grid grid-cols-2 gap-4">
+              <input
+                type="text"
+                name="fullname"
+                placeholder="Full name"
+                value={form.fullname}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 text-base text-[#202124] bg-white border border-[#dadce0] rounded-lg focus:outline-none focus:border-[#1a73e8] focus:ring-2 focus:ring-[#e8f0fe] transition-all duration-200"
+              />
+              <input
+                type="text"
+                name="username"
+                placeholder="Username"
+                value={form.username}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 text-base text-[#202124] bg-white border border-[#dadce0] rounded-lg focus:outline-none focus:border-[#1a73e8] focus:ring-2 focus:ring-[#e8f0fe] transition-all duration-200"
+              />
             </div>
 
-            <div className="relative">
-              <FaUserAlt className="absolute top-3 left-3 text-gray-400" />
-              <input type="text" name="username" placeholder="Username"
-                value={form.username} onChange={handleChange}
-                className="pl-10 w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-                required />
+            {/* Email */}
+            <input
+              type="email"
+              name="email"
+              placeholder="Email"
+              value={form.email}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-3 text-base text-[#202124] bg-white border border-[#dadce0] rounded-lg focus:outline-none focus:border-[#1a73e8] focus:ring-2 focus:ring-[#e8f0fe] transition-all duration-200"
+            />
+
+            {/* Password Row */}
+            <div className="grid grid-cols-2 gap-4">
+              <input
+                type="password"
+                name="password"
+                placeholder="Password"
+                value={form.password}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 text-base text-[#202124] bg-white border border-[#dadce0] rounded-lg focus:outline-none focus:border-[#1a73e8] focus:ring-2 focus:ring-[#e8f0fe] transition-all duration-200"
+              />
+              <input
+                type="password"
+                name="confirmPassword"
+                placeholder="Confirm"
+                value={form.confirmPassword}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 text-base text-[#202124] bg-white border border-[#dadce0] rounded-lg focus:outline-none focus:border-[#1a73e8] focus:ring-2 focus:ring-[#e8f0fe] transition-all duration-200"
+              />
             </div>
 
-            <div className="relative">
-              <FaEnvelope className="absolute top-3 left-3 text-gray-400" />
-              <input type="email" name="email" placeholder="Email"
-                value={form.email} onChange={handleChange}
-                className="pl-10 w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-                required />
-            </div>
-
-            <div className="relative">
-              <FaLock className="absolute top-3 left-3 text-gray-400" />
-              <input type="password" name="password" placeholder="Password"
-                value={form.password} onChange={handleChange}
-                className="pl-10 w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-                required />
-            </div>
-
-            <div className="relative">
-              <FaLock className="absolute top-3 left-3 text-gray-400" />
-              <input type="password" name="confirmPassword" placeholder="Confirm Password"
-                value={form.confirmPassword} onChange={handleChange}
-                className="pl-10 w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-                required />
-            </div>
-
-            <div>
-              <label className="flex items-center gap-2 mb-2 text-sm font-semibold text-gray-700">
-                <MdOutlineInterests />
-                Interests
+            {/* Interests */}
+            <div className="pt-2">
+              <label className="block text-sm font-medium text-[#202124] mb-3">
+                Select your interests
               </label>
               <div className="flex flex-wrap gap-2">
                 {interestsOptions.map((interest) => (
-                  <motion.div
+                  <motion.button
                     key={interest}
-                    whileHover={{ scale: 1.1 }}
-                    className={`cursor-pointer px-3 py-1 rounded-full border transition 
-                      ${form.interests.includes(interest)
-                        ? 'bg-blue-600 text-white border-blue-600'
-                        : 'bg-white text-gray-700 border-gray-300'}`}
+                    type="button"
                     onClick={() => toggleInterest(interest)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${form.interests.includes(interest)
+                        ? 'bg-[#1a73e8] text-white'
+                        : 'bg-[#f1f3f4] text-[#5f6368] hover:bg-[#e8eaed]'
+                      }`}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                   >
                     {interest}
-                  </motion.div>
+                  </motion.button>
                 ))}
               </div>
             </div>
 
-            <motion.button
-              type="submit"
-              className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition duration-300"
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              Register
-            </motion.button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-gray-600 text-sm">
-              Already have an account or prefer Google?{" "}
-              <Link to="/login" className="text-blue-600 hover:underline font-semibold">
-                Login here
+            {/* Submit */}
+            <div className="flex items-center justify-between pt-6">
+              <Link
+                to="/login"
+                className="text-sm font-medium text-[#1a73e8] hover:underline"
+              >
+                Sign in instead
               </Link>
-            </p>
-            <p className="text-gray-600 text-sm mt-2">
-              (Google Sign-In is available on the login page)
-            </p>
+              <motion.button
+                type="submit"
+                disabled={isLoading}
+                className="px-6 py-2.5 bg-[#1a73e8] text-white rounded-md font-medium text-sm hover:bg-[#1557b0] hover:shadow-md disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                {isLoading ? "Creating..." : "Create account"}
+              </motion.button>
+            </div>
+          </form>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-8 flex justify-between text-xs text-[#5f6368]">
+          <span>English (United States)</span>
+          <div className="flex gap-4">
+            <button className="hover:text-[#202124]">Help</button>
+            <button className="hover:text-[#202124]">Privacy</button>
+            <button className="hover:text-[#202124]">Terms</button>
           </div>
-        </motion.div>
-      </div>
+        </div>
+      </motion.div>
     </div>
   );
 };

@@ -1,11 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "react-hot-toast";
-import { FaLock, FaUserAlt } from "react-icons/fa";
-import { FiLogIn } from "react-icons/fi";
-import { FcGoogle } from "react-icons/fc";
-
 import { useAuthStore } from "../store/useAuth";
 import { API } from "../lib/axios";
 
@@ -13,33 +9,28 @@ const Login = () => {
   const navigate = useNavigate();
   const { login, authUser } = useAuthStore();
   const [form, setForm] = useState({ username: "", password: "" });
+  const [isLoading, setIsLoading] = useState(false);
   const googleButtonRef = useRef(null);
 
   useEffect(() => {
-    if (authUser) {
-      navigate("/");
-    }
+    if (authUser) navigate("/");
   }, [authUser, navigate]);
 
   useEffect(() => {
-    if (window.google && window.google.accounts && window.google.accounts.id) {
+    if (window.google?.accounts?.id) {
       window.google.accounts.id.initialize({
         client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID_FRONTEND,
         callback: handleGoogleLoginSuccess,
         auto_select: false,
         cancel_on_tap_outside: true,
       });
-
-      window.google.accounts.id.renderButton(
-        googleButtonRef.current,
-        {
-          theme: "outline",
-          size: "large",
-          text: "signin_with",
-          shape: "rectangular",
-          width: "350",
-        }
-      );
+      window.google.accounts.id.renderButton(googleButtonRef.current, {
+        theme: "outline",
+        size: "large",
+        text: "signin_with",
+        shape: "rectangular",
+        width: "100%",
+      });
     }
   }, []);
 
@@ -47,21 +38,16 @@ const Login = () => {
     const idToken = response.credential;
     try {
       const backendResponse = await API.post('/auth/google-login', { idToken });
-      
       if (backendResponse.data?.data?.user) {
-        // --- FIX APPLIED HERE ---
-        // Correct way to update Zustand store state
-        useAuthStore.setState({ authUser: backendResponse.data.data.user }); 
-        // --- END FIX ---
-        toast.success("Logged in with Google successfully!");
+        useAuthStore.getState().setAuthUser(backendResponse.data.data.user);
+        toast.success("Signed in with Google!");
         navigate("/");
       } else {
-        toast.error("Google login failed: Invalid response from server.");
+        toast.error("Google sign-in failed");
       }
-
     } catch (err) {
       console.error("Google login error:", err);
-      toast.error(err?.response?.data?.message || "Google login failed. Please try again.");
+      toast.error(err?.response?.data?.message || "Google sign-in failed");
     }
   };
 
@@ -69,6 +55,7 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
       const result = await login({
         username: form.username,
@@ -80,100 +67,111 @@ const Login = () => {
       }
     } catch (err) {
       toast.error(err.response?.data?.message || "Login failed");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex h-screen bg-gradient-to-r from-white to-sky-100 overflow-hidden">
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
       <motion.div
-        className="hidden md:flex w-1/2 items-center justify-center relative"
-        initial={{ opacity: 0, x: -50 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 1 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+        className="w-full max-w-md"
       >
-        <motion.div
-          className="w-80 h-80 border-4 border-blue-300 rounded-full absolute animate-pulse"
-          animate={{ scale: [1, 1.2, 1] }}
-          transition={{ repeat: Infinity, duration: 6 }}
-        />
-        <motion.div
-          className="text-center z-10 text-blue-800 text-4xl font-bold"
-          initial={{ scale: 0.8 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 1 }}
-        >
-          Welcome Back!
-        </motion.div>
+        {/* Card */}
+        <div className="bg-white border border-[#e8eaed] rounded-lg p-8 sm:p-10 shadow-sm">
+          {/* Logo */}
+          <div className="text-center mb-8">
+            <Link to="/" className="inline-block">
+              <span className="text-2xl font-semibold text-[#202124]">
+                Event<span className="text-[#1a73e8]">Ally</span>
+              </span>
+            </Link>
+            <h1 className="text-2xl font-normal text-[#202124] mt-6 mb-2">Sign in</h1>
+            <p className="text-sm text-[#5f6368]">to continue to EventAlly</p>
+          </div>
 
-        <motion.div
-          className="absolute bottom-10 left-16 text-blue-500 opacity-30"
-          animate={{ y: [0, 20, 0] }}
-          transition={{ repeat: Infinity, duration: 4 }}
-        >
-          <FaLock size={50} />
-        </motion.div>
-      </motion.div>
-
-      <div className="flex w-full md:w-1/2 items-center justify-center p-6">
-        <motion.div
-          className="w-full max-w-md bg-white p-8 rounded-xl shadow-2xl"
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <h2 className="text-3xl font-bold text-center mb-6 text-blue-700 flex items-center justify-center gap-2">
-            <FiLogIn /> Login
-          </h2>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="relative">
-              <FaUserAlt className="absolute top-3 left-3 text-gray-400" />
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Username/Email Input */}
+            <div>
               <input
                 type="text"
                 name="username"
-                placeholder="Username or Email"
+                placeholder="Email or username"
                 value={form.username}
                 onChange={handleChange}
-                className="pl-10 w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
                 required
+                className="w-full px-4 py-3 text-base text-[#202124] bg-white border border-[#dadce0] rounded-lg focus:outline-none focus:border-[#1a73e8] focus:ring-2 focus:ring-[#e8f0fe] transition-all duration-200"
               />
             </div>
 
-            <div className="relative">
-              <FaLock className="absolute top-3 left-3 text-gray-400" />
+            {/* Password Input */}
+            <div>
               <input
                 type="password"
                 name="password"
                 placeholder="Password"
                 value={form.password}
                 onChange={handleChange}
-                className="pl-10 w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
                 required
+                className="w-full px-4 py-3 text-base text-[#202124] bg-white border border-[#dadce0] rounded-lg focus:outline-none focus:border-[#1a73e8] focus:ring-2 focus:ring-[#e8f0fe] transition-all duration-200"
               />
             </div>
 
-            <motion.button
-              type="submit"
-              className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition duration-300"
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              Login
-            </motion.button>
+            {/* Forgot Password Link */}
+            <div className="text-left">
+              <button type="button" className="text-sm font-medium text-[#1a73e8] hover:underline">
+                Forgot password?
+              </button>
+            </div>
+
+            {/* Submit Button */}
+            <div className="flex items-center justify-between pt-4">
+              <Link
+                to="/register"
+                className="text-sm font-medium text-[#1a73e8] hover:underline"
+              >
+                Create account
+              </Link>
+              <motion.button
+                type="submit"
+                disabled={isLoading}
+                className="px-6 py-2.5 bg-[#1a73e8] text-white rounded-md font-medium text-sm hover:bg-[#1557b0] hover:shadow-md disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                {isLoading ? "Signing in..." : "Next"}
+              </motion.button>
+            </div>
           </form>
 
-          <div className="mt-6 text-center">
-            <div className="relative flex items-center py-2">
-              <div className="flex-grow border-t border-gray-300"></div>
-              <span className="flex-shrink mx-4 text-gray-500 text-sm">OR</span>
-              <div className="flex-grow border-t border-gray-300"></div>
+          {/* Divider */}
+          <div className="relative my-8">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-[#e8eaed]" />
             </div>
-            <div className="flex justify-center mt-4">
-              <div ref={googleButtonRef} className="w-full max-w-xs"></div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-white text-[#5f6368]">or</span>
             </div>
           </div>
-        </motion.div>
-      </div>
+
+          {/* Google Sign In */}
+          <div ref={googleButtonRef} className="w-full flex justify-center" />
+        </div>
+
+        {/* Footer */}
+        <div className="mt-8 flex justify-between text-xs text-[#5f6368]">
+          <span>English (United States)</span>
+          <div className="flex gap-4">
+            <button className="hover:text-[#202124]">Help</button>
+            <button className="hover:text-[#202124]">Privacy</button>
+            <button className="hover:text-[#202124]">Terms</button>
+          </div>
+        </div>
+      </motion.div>
     </div>
   );
 };

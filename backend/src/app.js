@@ -30,8 +30,19 @@ scheduleOldEventCleanup();
 import authRouter from './routes/auth.route.js'
 import eventRouter from './routes/event.route.js'
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    uptime: process.uptime(),
+    memory: process.memoryUsage()
+  });
+});
+
+// API routes
 app.use('/api/v1/auth',authRouter)
 app.use('/api/v1/events',eventRouter)
-
 
 export {app}

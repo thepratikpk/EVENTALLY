@@ -5,40 +5,90 @@ import { Toaster } from 'react-hot-toast';
 const ToasterProvider = () => {
   return (
     <Toaster
-      position="top-center"
+      position="top-right"
+      gutter={12}
       toastOptions={{
         success: {
           style: {
-            background: '#e0f7fa',
-            color: '#00796b',
-            border: '1px solid #4dd0e1',
+            background: '#ffffff',
+            color: '#0f172a',
+            border: '1px solid #e2e8f0',
+            borderLeft: '4px solid #10b981',
             borderRadius: '8px',
-            padding: '12px 16px',
-            fontWeight: '500'
+            padding: '16px 20px',
+            fontWeight: '500',
+            fontSize: '14px',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+            maxWidth: '400px',
           },
           iconTheme: {
-            primary: '#00796b',
-            secondary: '#b2dfdb',
+            primary: '#10b981',
+            secondary: '#ffffff',
           },
+          duration: 5000,
         },
         error: {
           style: {
-            background: '#ffebee',
-            color: '#c62828',
-            border: '1px solid #ef9a9a',
+            background: '#ffffff',
+            color: '#0f172a',
+            border: '1px solid #e2e8f0',
+            borderLeft: '4px solid #ef4444',
             borderRadius: '8px',
-            padding: '12px 16px',
-            fontWeight: '500'
+            padding: '16px 20px',
+            fontWeight: '500',
+            fontSize: '14px',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+            maxWidth: '400px',
           },
           iconTheme: {
-            primary: '#c62828',
-            secondary: '#ffcdd2',
+            primary: '#ef4444',
+            secondary: '#ffffff',
+          },
+          duration: 6000,
+        },
+        loading: {
+          style: {
+            background: '#ffffff',
+            color: '#0f172a',
+            border: '1px solid #e2e8f0',
+            borderLeft: '4px solid #3b82f6',
+            borderRadius: '8px',
+            padding: '16px 20px',
+            fontWeight: '500',
+            fontSize: '14px',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+            maxWidth: '400px',
+          },
+          iconTheme: {
+            primary: '#3b82f6',
+            secondary: '#ffffff',
           },
         },
-        duration: 4000,
+        blank: {
+          style: {
+            background: '#ffffff',
+            color: '#0f172a',
+            border: '1px solid #e2e8f0',
+            borderLeft: '4px solid #64748b',
+            borderRadius: '8px',
+            padding: '16px 20px',
+            fontWeight: '500',
+            fontSize: '14px',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+            maxWidth: '400px',
+          },
+          duration: 4000,
+        },
         style: {
+          background: '#ffffff',
+          color: '#0f172a',
           fontSize: '14px',
-          borderRadius: '10px',
+          fontWeight: '500',
+          borderRadius: '8px',
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+          maxWidth: '400px',
+          padding: '16px 20px',
         },
       }}
     />

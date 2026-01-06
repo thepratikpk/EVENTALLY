@@ -3,6 +3,8 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { deleteFromCloudinary, getPublicIdFromUrl, uploadOnCloudinary } from "../utils/coudinary.js";
+import { clearEventCache } from "../middleware/cache.middleware.js";
+import { cleanupOldEvents } from "../utils/cleanupEvents.js";
 
 // OLD
 
@@ -128,38 +130,95 @@ import { deleteFromCloudinary, getPublicIdFromUrl, uploadOnCloudinary } from "..
 // NEW 
 
 const getAllEvents = asyncHandler(async (req, res) => {
-    const events = await Event.find().sort({ event_date: 1 })
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Filter for public events
+    const query = {};
+    const now = new Date();
+
+    // Only show future events (events that haven't passed yet)
+    query.event_date = { $gte: now };
+
+    const [events, totalCount] = await Promise.all([
+        Event.find(query)
+            .select('event_name title description event_date time venue domains thumbnail club_name registration_link')
+            .sort({ event_date: 1 })
+            .skip(skip)
+            .limit(limit)
+            .lean(), // Use lean() for better performance
+        Event.countDocuments(query)
+    ]);
+
     if (!events) {
         throw new ApiError(400, "Failed to fetch events")
     }
 
-    
+    const totalPages = Math.ceil(totalCount / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
 
     return res
         .status(200)
-        .json(new ApiResponse(200, events, "All evnts are fetches"))
+        .json(new ApiResponse(200, {
+            events,
+            pagination: {
+                currentPage: page,
+                totalPages,
+                totalCount,
+                hasNextPage,
+                hasPrevPage,
+                limit
+            }
+        }, "Events fetched successfully"))
 })
 
 const getEventsByUserInterests = asyncHandler(async (req, res) => {
     const userInterests = req.user.interests
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
 
-    if (!userInterests) {
-        throw new ApiError(400, "User has no intersest defined")
+    if (!userInterests || userInterests.length === 0) {
+        throw new ApiError(400, "User has no interests defined")
     }
 
-    const events = await Event.find({
-        domains: {
-            $in: userInterests
-        }
-    })
+    const now = new Date();
+    const query = {
+        domains: { $in: userInterests },
+        event_date: { $gte: now }
+    };
+
+    const [events, totalCount] = await Promise.all([
+        Event.find(query)
+            .select('event_name title description event_date time venue domains thumbnail club_name registration_link')
+            .sort({ event_date: 1 })
+            .skip(skip)
+            .limit(limit)
+            .lean(),
+        Event.countDocuments(query)
+    ]);
 
     if (!events) {
-        throw new ApiError(400, "Events not fetched acc to interest")
+        throw new ApiError(400, "Events not fetched according to interest")
     }
+
+    const totalPages = Math.ceil(totalCount / limit);
 
     return res
         .status(200)
-        .json(new ApiResponse(200, events, "Evenets matching with interest fetched"))
+        .json(new ApiResponse(200, {
+            events,
+            pagination: {
+                currentPage: page,
+                totalPages,
+                totalCount,
+                hasNextPage: page < totalPages,
+                hasPrevPage: page > 1,
+                limit
+            }
+        }, "Events matching with interests fetched"))
 })
 
 
@@ -183,7 +242,7 @@ const createEvent = asyncHandler(async (req, res) => {
     let fullEventDate;
     try {
         fullEventDate = new Date(`${event_date} ${time}`);
-        
+
         if (isNaN(fullEventDate.getTime())) {
             throw new ApiError(400, "Invalid event date or time format provided.");
         }
@@ -206,23 +265,26 @@ const createEvent = asyncHandler(async (req, res) => {
         domains,
         registration_link,
         thumbnail: thumbnail?.secure_url || "",
-        isApproved: false
+        isApproved: true  // Auto-approve all events
     })
+
+    // Clear cache when new event is created
+    clearEventCache();
 
     return res
         .status(200)
         .json(new ApiResponse(200, event, "Event is Created"))
 })
 
-const getEventById=asyncHandler(async(req,res)=>{
-    const event=await Event.findById(req.params.id)
-    if(!event){
-        throw new ApiError(400,"Id of event is not fetched")
+const getEventById = asyncHandler(async (req, res) => {
+    const event = await Event.findById(req.params.id)
+    if (!event) {
+        throw new ApiError(400, "Id of event is not fetched")
     }
 
     return res
-    .status(200)
-    .json(new ApiResponse(200,event,"Event is fetched by id"))
+        .status(200)
+        .json(new ApiResponse(200, event, "Event is fetched by id"))
 
 })
 
@@ -267,7 +329,7 @@ const updateEventDetails = asyncHandler(async (req, res) => {
         venue,
         registration_link,
         domains,
-        isApproved: false,
+        isApproved: true,  // Auto-approve all events
     };
 
     if (updatedFullEventDate) {
@@ -282,6 +344,9 @@ const updateEventDetails = asyncHandler(async (req, res) => {
             new: true, runValidators: true
         }
     )
+
+    // Clear cache when event is updated
+    clearEventCache();
 
     return res
         .status(200)
@@ -322,7 +387,10 @@ const updateEventThumbnail = asyncHandler(async (req, res) => {
     const updatedthumbnail = await uploadOnCloudinary(localThumbnailPath)
 
     event.thumbnail = updatedthumbnail.secure_url
-    await event.save({ validateBeforeSave:false })
+    await event.save({ validateBeforeSave: false })
+
+    // Clear cache when thumbnail is updated
+    clearEventCache();
 
     return res
         .status(200)
@@ -332,19 +400,42 @@ const updateEventThumbnail = asyncHandler(async (req, res) => {
 
 })
 
-const getMyPostedEvents =asyncHandler(async(req,res)=>{
-    
+const getMyPostedEvents = asyncHandler(async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
 
-    const events=await Event.find({club:req.user._id}).sort({ event_date: -1 })
+    const query = { club: req.user._id };
 
-    if(!events){
-        throw new ApiError("My posted events not fetched")
+    const [events, totalCount] = await Promise.all([
+        Event.find(query)
+            .select('event_name title description event_date time venue domains thumbnail registration_link')
+            .sort({ event_date: -1 })
+            .skip(skip)
+            .limit(limit)
+            .lean(),
+        Event.countDocuments(query)
+    ]);
+
+    if (!events) {
+        throw new ApiError(400, "My posted events not fetched")
     }
 
+    const totalPages = Math.ceil(totalCount / limit);
 
     return res
-    .status(200)
-    .json(new ApiResponse(200,events,'Your posted events fetched successfully'))
+        .status(200)
+        .json(new ApiResponse(200, {
+            events,
+            pagination: {
+                currentPage: page,
+                totalPages,
+                totalCount,
+                hasNextPage: page < totalPages,
+                hasPrevPage: page > 1,
+                limit
+            }
+        }, 'Your posted events fetched successfully'))
 })
 
 const deleteEvent = asyncHandler(async (req, res) => {
@@ -370,10 +461,26 @@ const deleteEvent = asyncHandler(async (req, res) => {
 
     await event.deleteOne();
 
+    // Clear cache when event is deleted
+    clearEventCache();
+
     return res
         .status(200)
         .json(new ApiResponse(200, null, "Event deleted successfully"));
 });
+
+const cleanupExpiredEvents = asyncHandler(async (req, res) => {
+    const deletedCount = await cleanupOldEvents();
+
+    // Clear cache after cleanup
+    clearEventCache();
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, { deletedCount }, `Cleanup completed. Deleted ${deletedCount} expired events.`));
+});
+
+
 
 export {
     getAllEvents,
@@ -383,5 +490,6 @@ export {
     updateEventThumbnail,
     getMyPostedEvents,
     getEventById,
-    deleteEvent
+    deleteEvent,
+    cleanupExpiredEvents
 }
