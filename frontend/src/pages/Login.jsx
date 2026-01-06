@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "react-hot-toast";
@@ -11,6 +11,23 @@ const Login = () => {
   const [form, setForm] = useState({ username: "", password: "" });
   const [isLoading, setIsLoading] = useState(false);
   const googleButtonRef = useRef(null);
+
+  const handleGoogleLoginSuccess = useCallback(async (response) => {
+    const idToken = response.credential;
+    try {
+      const backendResponse = await API.post('/auth/google-login', { idToken });
+      if (backendResponse.data?.data?.user) {
+        useAuthStore.setState({ authUser: backendResponse.data.data.user });
+        toast.success("Signed in with Google!");
+        navigate("/");
+      } else {
+        toast.error("Google sign-in failed");
+      }
+    } catch (err) {
+      console.error("Google login error:", err);
+      toast.error(err?.response?.data?.message || "Google sign-in failed");
+    }
+  }, [navigate]);
 
   useEffect(() => {
     if (authUser) navigate("/");
@@ -32,24 +49,7 @@ const Login = () => {
         width: "100%",
       });
     }
-  }, []);
-
-  const handleGoogleLoginSuccess = async (response) => {
-    const idToken = response.credential;
-    try {
-      const backendResponse = await API.post('/auth/google-login', { idToken });
-      if (backendResponse.data?.data?.user) {
-        useAuthStore.getState().setAuthUser(backendResponse.data.data.user);
-        toast.success("Signed in with Google!");
-        navigate("/");
-      } else {
-        toast.error("Google sign-in failed");
-      }
-    } catch (err) {
-      console.error("Google login error:", err);
-      toast.error(err?.response?.data?.message || "Google sign-in failed");
-    }
-  };
+  }, [handleGoogleLoginSuccess]);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
